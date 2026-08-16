@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
+
 /* ============================================================
    SSOPLE Dashboard — style.css
    배경: 연한 무채색(#F6F5F3) · 카드: 흰색 · 포인트: 브랜드 레드 #E83217
@@ -412,11 +413,25 @@ td.strong{font-weight:800}
   .u-chip{display:none}
 }
 
+/* ══════════ v3 — 연동 · 인제스트 · 저장 ══════════ */
+.pk-edit td{vertical-align:middle}
+.pk-in{width:92px;text-align:right;padding:6px 8px}
+.url-in{min-width:230px;width:100%;padding:6px 8px;font-size:12px}
+.thumb{width:100%;height:120px;object-fit:cover;border-radius:12px;display:block}
+.grid.tight td, .grid.tight th{padding:6px 8px;font-size:12.5px}
+.wrapseg{flex-wrap:wrap;gap:6px}
+.wrapseg select{max-width:180px;font-size:12px}
+.reset-link{display:block;margin:12px auto 0;font-size:11.5px;color:var(--sub);
+  text-decoration:underline;text-underline-offset:3px}
+.accept{background:#EAF6EE;border:1px solid #BFE3CB;border-radius:12px;padding:10px 13px;font-size:12.5px}
+.accept ul,.reject ul{margin:6px 0 0;padding-left:16px}
+
 </style>
 </head>
 <body>
 <noscript><p style="padding:24px;font-family:sans-serif">이 대시보드는 자바스크립트가 필요합니다.</p></noscript>
 <script>
+
 /* ===== rules.js ===== */
 /* ============================================================
    SSOPLE Dashboard — rules.js
@@ -608,52 +623,59 @@ SP.data = (() => {
   ];
   const ROOM_NAMES = ["그레이스톤","클레이","테라코타","샌드","아이보리","차콜","세이지","오크","린넨","코튼","모카","앰버"];
 
-  const branches = [];
-  (function makeBranches(){
-    let i = 0;
-    while (branches.length < 130) {
-      const [region, area] = AREAS[i % AREAS.length];
-      const nth = Math.floor(i / AREAS.length);           // 두 바퀴째는 2호점
-      const name = area + (nth ? `${nth+1}호` : "") + "점";
-      const tier = weighted([[1,3],[2,5],[3,4]]);          // 1 프리미엄 ~ 3 스탠다드
-      const roomCnt = weighted([[1,6],[2,4]]);
-      const rooms = [];
-      for (let r=0;r<roomCnt;r++) rooms.push({ id:`S${branches.length+1}-${r+1}`, name: pick(ROOM_NAMES), visible:true });
-      // 지점 고유의 수요 체력 — 순위·가동률이 실제처럼 갈리게 함
-      const demand = 0.55 + rnd()*0.75;
-      branches.push({ id:"B"+String(branches.length+1).padStart(3,"0"),
-        name, region, tier, rooms, demand,
-        owner: pick(["김","이","박","최","정","조","윤","장","임","한"]) + pick(["민수","서연","지훈","현우","수빈","예은","도윤","하준","지아","시우"]),
-        openH:11, closeH:24 });
-      i++;
-    }
-  })();
+  /* ── 실제 지점 정본 — 운영관리 총괄표에서 생성 (수정은 시트에서) ── */
+  const REAL = [{"id": "S-01", "code": "S-01", "name": "건대 캐치볼", "shortName": "캐치볼", "region": "서울", "area": "건대", "addr": "서울시 광진구 동일로 30길 51, 지하 1층", "type": "가맹", "owner": "임화정", "ownerRaw": "임화정 010-3767-8837  / 010 3361 4792 <- 매니저", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 30, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 210000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 6, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942689/items/5187293?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 6, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942689/items/5187308?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 210000, 250000, 130000], "base": 6, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942689/items/5187307?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, null, null, 180000], "base": 6, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942689/items/5187308?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GcWwg4VI", "sc": "https://www.spacecloud.kr/space/52640", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "임화정 010-3767-8837  / 010 3361 4792 <- 매니저", "sameday": "무조건 가능하다고 함 / ( 퇴실 연장 불가, 이른입실은 문의 후 가능 )", "parking": "X / 화양동 공영주차장  / 1시간에 2400원 / 파티룸에서 도보 5분  /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "KT_GiGA_5G_A623", "wifi": "4cea50ef92", "route": "어린이대공원역 4번 출구에서 378m /  옥루몽 안쪽으로 쭉 직진 후 작심스터디카페, 푸라닭치킨 건물", "memo": "건대·세종대 학생증 10% 할인 제휴. 퇴실 연장 불가"}, "demand": 0.6}, {"id": "S-02", "code": "S-02", "name": "건대 플레이션", "shortName": "플레이션", "region": "서울", "area": "건대", "addr": "서울 광진구 능동로13길 39", "type": "직영", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [70000, 70000, 80000, 80000], "priceNight": [100000, 150000, 200000, 100000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 80000, 80000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1275525/items/6321703?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [100000, 150000, 200000, 100000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1275525/items/6336392?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [100000, 140000, 270000, 140000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1275525/items/6346369?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xGIpLaex", "sc": "https://www.spacecloud.kr/space/67179", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": "전면 불가"}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "화양동공영주차장 / 24시간 운영 / 5분당 200원 / 1시간 2,400원 / 도보 2분 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "X/1층", "door": "9580*", "ssid": "KT_GIGA_5G_113D", "wifi": "cfdf91fc72", "route": "화양동공영주차장 / 24시간 운영 / 5분당 200원 / 1시간 2,400원 / 도보 2분 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": "건대·세종대 학생증 인증 시 최초 이용금액 10% 할인(수동 결제 안내, 26년 3월 재개). 청소 이슈 재예약 할인 대상 고객 1건 관리 중"}, "demand": 1.007}, {"id": "S-03", "code": "S-03", "name": "구로 어반아일랜드", "shortName": "어반아일랜드", "region": "서울", "area": "구로", "addr": "서울 구로구 시흥대로 571, 부호빌딩 5층 501호", "type": "가맹", "owner": "강은구", "ownerRaw": "강은구 / 010-2740-4896", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 15, "priceDay": [70000, 70000, 100000, 100000], "priceNight": [130000, 200000, 230000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 100000, 100000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/979435/items/5310799?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/979435/items/5310857?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 200000, 230000, 130000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/979435/items/5310856?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, null, 320000, 160000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/979435/items/5310857?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FRcM1XW2", "sc": "https://www.spacecloud.kr/space/54422", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "강은구 / 010-2740-4896", "sameday": "항상 가능", "parking": "X /  구로디지털단지역 노상공영주차장 /  5분당 260원 /  ※ 일일주차권 없음 /   /  구로디지털단지역2카드전용환승주차장 /  1시간 3,120원 /  2시간 6,240원 /  4시간 12,480원 /   / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "와이파이 및 비번은 냉장고 앞 메모판에 적어둠 /  KT", "wifi": "와이파이 및 비번은 냉장고 앞 메모판에 적어둠 / 5fcz19ic09", "route": "구로디지털단지역 2번출구로 나와 할리스, 투썸 방향으로 쭉 오시면 됩니다. 다이소 건너편 건물이며 옥상층까지 올라오시면 됩니다. /  (문에 어반아일랜드파티룸 안내문 크게 써져있음)", "memo": ""}, "demand": 0.743}, {"id": "S-04", "code": "S-04", "name": "구의 플레이션", "shortName": "플레이션", "region": "서울", "area": "구의", "addr": "서울 광진구 아차산로51길 8, 지하 1층", "type": "가맹", "owner": "김수남", "ownerRaw": "김수남 / 010-3928-9916", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 24, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [130000, 230000, 290000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 24, "url": "https://booking.naver.com/booking/12/bizes/1432542/items/6821470?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 230000, 290000, 130000], "base": 4, "max": 24, "url": "https://booking.naver.com/booking/12/bizes/1432542/items/6871485?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [130000, 200000, 350000, 200000], "base": 4, "max": 24, "url": "https://booking.naver.com/booking/12/bizes/1432542/items/6871488?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xQiIbYl1", "sc": "https://www.spacecloud.kr/space/72383", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "김수남 / 010-3928-9916", "sameday": "항상 가능 /  (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차1대 가능 /  (병렬주차라 경우에따라 주차위치 변경 필요할수도 있음) /   / - /  초과시 270m 내 구의1동 공영주차장 /  / 60분 2,400원 / 120분 4,800원 / 240분 9,600원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "KT_GiGA_5G_8933", "wifi": "4ckd7hg228", "route": "자차 이용시 : 서울특별시 광진구 아차산로51길 8, 지하1층 /  도보 시 : 구의역 1번 출구에서 112m, 1분 거리(도로 오른쪽에 위치)", "memo": ""}, "demand": 1.15}, {"id": "S-05", "code": "S-05", "name": "까치산 해피아워", "shortName": "해피아워", "region": "서울", "area": "까치산", "addr": "서울특별시 강서구 초록마을로 155, 지하 1층", "type": "가맹", "owner": "하충환", "ownerRaw": "하충환 010-4556-8025 / * 연락 안될 시 010-5238-3729 (급한경우에)", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 14, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 200000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1042427/items/5519075?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1042427/items/5519185?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 200000, 250000, 130000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1042427/items/5519159?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, null, 350000, 160000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1042427/items/5519185?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/Fl2TZfSa", "sc": "https://www.spacecloud.kr/space/57485", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "하충환 010-4556-8025 / * 연락 안될 시 010-5238-3729 (급한경우에)", "sameday": "O", "parking": "2대 고정 주차 가능 (무료) /  (건물 내 평지 주차장 1대, 주변 1대) /  (초과시 공영주차장 이용 필요) /  * 평지 주차장 : 커피숍 셔터 열고 주차해야함 /  * 주변 주차장 : 도착 후 점주님께 전화문의 /   /  - / 초과시  화곡8-1공영주차장 /  1시간 600원 /  2시간 1,200원 /  4시간 2,400원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "실내안내문에 기재", "wifi": "실내안내문에 기재", "route": "까치산역 1번출구에서 쭉 직진 후 골목으로 들어오셔서 요거프레소 건물로 오시면 됩니다. 지하 1층에 위치해있습니다.", "memo": ""}, "demand": 0.886}, {"id": "S-06", "code": "S-06", "name": "서초 시그니처 컨벤션", "shortName": "시그니처 컨벤션", "region": "서울", "area": "서초", "addr": "서울특별시 서초구 마방로 48, 통인빌딩 4층", "type": "확인필요", "owner": "—", "ownerRaw": "—", "resp": "확인 필요", "deposit": 80000, "depositLabel": "확인要", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 15, "maxP": 60, "priceDay": [350000, 400000, 450000, 400000], "priceNight": [450000, 500000, 550000, 500000], "pkgs": [{"k": "morning", "label": "오전", "hrs": "09~15시", "p": [350000, 350000, 400000, 400000], "base": 15, "max": 60, "url": "https://booking.naver.com/booking/12/bizes/1477889/items/6984183?area=pll&lang=ko&theme=place"}, {"k": "day", "label": "낮", "hrs": "12~18시", "p": [350000, 400000, 450000, 400000], "base": 15, "max": 60, "url": "https://booking.naver.com/booking/12/bizes/1477889/items/6998889?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [300000, null, null, 400000], "base": 15, "max": 60, "url": ""}, {"k": "night", "label": "밤", "hrs": "18~24시", "p": [450000, 500000, 550000, 500000], "base": 15, "max": 60, "url": "https://booking.naver.com/booking/12/bizes/1477889/items/6998904?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xktISnl1", "sc": "https://www.spacecloud.kr/space/73456", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "확인 필요", "host": "—", "sameday": "—", "parking": "—", "floor": "—", "door": "—", "ssid": "—", "wifi": "—", "route": "—", "memo": "목요일 낮타임·월요일 오전타임 예약 불가(점주 사용) — 사전답사도 이 시간대 회피. 오전타임 퇴실연장 불가. 3시간 패키지는 시간당 10만원"}, "demand": 0.622}, {"id": "S-07", "code": "S-07", "name": "선유도 루프탑", "shortName": "루프탑", "region": "서울", "area": "선유도", "addr": "서울 영등포구 양평로 136, 유니언호텔 14층", "type": "확인필요", "owner": "김가림", "ownerRaw": "김가림 / 010-8758-0174", "resp": "모두 점주응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 15000, "addFeeLabel": "1인당 1.5만원", "baseP": 20, "maxP": 30, "priceDay": [800000, 800000, 600000, 600000], "priceNight": [600000, 800000, 800000, 600000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [800000, 800000, 600000, 600000], "base": 20, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1278556/items/6339509?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "18~00시", "p": [600000, 800000, 800000, 600000], "base": 20, "max": 30, "url": ""}], "place": "https://naver.me/5qDMnjyg", "sc": "", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "김가림 / 010-8758-0174", "sameday": "X", "parking": "주차 가능 / 지하주차장 2대까지 무료 가능 / (주차 공간이 매우 협소하기 때문에 / 주차 희망 시 사전 문의 필수 / / 출차 전 리셉션에 차량번호 회신 필수) /  / 그 외 주차 시 10분 당 1000원 (주차장 내 무인 정산기 이용)", "floor": "O", "door": "—", "ssid": "unionhotel14F_2.4", "wifi": "unionhotel14F", "route": "선유도역 1번출구에서 70m / (도보 30초) / 유니언호텔 14층으로 오시면 됩니다.", "memo": "낮·밤 2개 패키지만 운영(밤 18~00시). 기간임박 할인 미진행"}, "demand": 1.029}, {"id": "S-08", "code": "S-08", "name": "신도림 공간서가", "shortName": "공간서가", "region": "서울", "area": "신도림", "addr": "서울 영등포구 경인로 706, 한양빌딩 1층 106호", "type": "가맹", "owner": "심영섭", "ownerRaw": "심영섭 / 010-5123-7048 / - / 4월 28일부터 무기한 임시점주 동반  / 010-8924-0181 / ( 정선미 )", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [60000, 60000, 90000, 90000], "priceNight": [110000, 150000, 170000, 110000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 90000, 90000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/918081/items/5101266?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/918081/items/5101335?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [110000, 150000, 170000, 110000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/918081/items/5101286?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [100000, 130000, 170000, 120000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/918081/items/5101335?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/Fjj9igJE", "sc": "https://www.spacecloud.kr/space/51246?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "심영섭 / 010-5123-7048 / - / 4월 28일부터 무기한 임시점주 동반  / 010-8924-0181 / ( 정선미 )", "sameday": "항상 가능", "parking": "야외테라스 철거(이용불가) / → 주차공간으로 사용(1대) / - / 파티룸 30미터 이내 도림천교 다리옆 주차공간 有 / (신도림역에서 영등포역 방향으로 가다 / 도림교 건너자마자 우회전하면 고가도로 밑으로 / 주차하는 박스선들이 보임 / 주차관리원(010-9170-6340)과 통화로 시간권 발급요청 및 승인 후 주차가능 / 09:00~18:00 / 시간당 1200원) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "KT_GiGA_C898", "wifi": "dz7bbb2397", "route": "신도림역 6번 출구에서 276m /  한양빌딩 멘야이찌방 건물 1층 제일 끝쪽 106호", "memo": ""}, "demand": 0.765}, {"id": "S-09", "code": "S-09", "name": "신촌 레스텔", "shortName": "레스텔", "region": "서울", "area": "신촌", "addr": "서울특별시 서대문구 연세로5가길 11, 6층", "type": "직영", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 8, "priceDay": [80000, 80000, 90000, 90000], "priceNight": [120000, 160000, 200000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 90000, 90000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1555659/items/7268501"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 90000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1555659/items/7270968"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 160000, 200000, 120000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1555659/items/7270955"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 200000, 260000, 180000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1555659/items/7270968"}], "place": "https://naver.me/x2cuGCdY", "sc": "https://www.spacecloud.kr/space/75750", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (6층)", "door": "1234*", "ssid": "KT_GiGA_5G_85E5", "wifi": "bf27df7115", "route": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 1.172}, {"id": "S-10", "code": "S-10", "name": "신촌 신촌서강", "shortName": "신촌서강", "region": "서울", "area": "신촌", "addr": "서울 마포구 고산길 15, 지하1층", "type": "가맹", "owner": "안정환", "ownerRaw": "안정환  010-6787-2258", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 20, "priceDay": [80000, 80000, 120000, 120000], "priceNight": [140000, 220000, 250000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 120000, 120000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/927454/items/5136105?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [90000, null, null, 120000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/927454/items/5136114?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [140000, 220000, 250000, 140000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/927454/items/5136113?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [140000, 200000, null, 200000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/927454/items/5136114?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xpY2CTwg", "sc": "https://www.spacecloud.kr/space/41867?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "안정환  010-6787-2258", "sameday": "O", "parking": "불가 / - / 창천 공영 주차장 / 운영시간 : 24시 / 5분당 200원 / https://naver.me/Fvn78Rbi /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X / 지하1층", "door": "—", "ssid": "신촌서강와이파이", "wifi": "비번없음", "route": "신촌역 6번 출구에서 267m /  홍두깨칼국수에서 언덕 쭉올라오셔서 좌회전 하시면 됩니다.", "memo": ""}, "demand": 0.908}, {"id": "S-11", "code": "S-11", "name": "신촌 어반홀리", "shortName": "어반홀리", "region": "서울", "area": "신촌", "addr": "서울시 서대문구 연세로5가길 11, 2층", "type": "직영", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 20, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [100000, 160000, 200000, 100000], "pkgs": [{"k": "day", "label": "낮", "hrs": "11~16시", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1370330/items/6601510?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 100000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1370330/items/6605060?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [100000, 160000, 200000, 100000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1370330/items/6605012?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 150000, 300000, 150000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1370330/items/6605060?area=pll&entry=pll&lang=ko&theme=place"}], "place": "https://naver.me/Gj6BT2Vc", "sc": "https://www.spacecloud.kr/space/70113", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (2층)", "door": "0404*", "ssid": "U+Net2474", "wifi": "#9JB8E9AEB", "route": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 0.644}, {"id": "S-12", "code": "S-12", "name": "신촌 플레이션 신촌1호점", "shortName": "플레이션 신촌1호점", "region": "서울", "area": "신촌", "addr": "서울특별시 서대문구 연세로11길 5, 이케이빌딩 지하 2층", "type": "위탁관리", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 8, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [120000, 170000, 250000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "11~16시", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1145675/items/5884265?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [120000, 170000, 250000, 120000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1145675/items/5886138?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "12~22시", "p": [130000, 190000, 350000, 190000], "base": 4, "max": 8, "url": "https://booking.naver.com/booking/12/bizes/1145675/items/5886139?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FtuIOGqq", "sc": "https://www.spacecloud.kr/space/62407", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "타이거 민영 주차장 도보 3분 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  / + 타이거 옆 백양, 신촌, 풍년 사설 주차장 (1시간 5천원) /  / 명신 주차장(1시간 4천원) 도보 3분 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O / 지하2층", "door": "2580*", "ssid": "TP_Link_2EAC", "wifi": "68597054.0", "route": "타이거 민영 주차장 도보 3분 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  / + 타이거 옆 백양, 신촌, 풍년 사설 주차장 (1시간 5천원) /  / 명신 주차장(1시간 4천원) 도보 3분 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 1.051}, {"id": "S-13", "code": "S-13", "name": "신촌 플레이션 신촌2호점", "shortName": "플레이션 신촌2호점", "region": "서울", "area": "신촌", "addr": "서울시 서대문구 연세로5가길 11, 3층", "type": "직영", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 14, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [140000, 250000, 290000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "11~16시", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1370343/items/6601573?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [140000, 250000, 290000, 140000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1370343/items/6604831?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "12~22시", "p": [130000, 220000, 400000, 220000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/1370343/items/6604892?area=pll&entry=pll&lang=ko&theme=place"}], "place": "https://naver.me/FuzXDAOC", "sc": "https://www.spacecloud.kr/space/70112", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (3층)", "door": "4332*", "ssid": "U+NetEEB4_5G", "wifi": "PDFEB0D42@", "route": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 0.787}, {"id": "S-14", "code": "S-14", "name": "신촌 플레이션 신촌3호점", "shortName": "플레이션 신촌3호점", "region": "서울", "area": "신촌", "addr": "서울시 서대문구 연세로5가길 11, 5층", "type": "직영", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [140000, 250000, 280000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "11~16시", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1534488/items/7184715"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [140000, 250000, 280000, 140000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1534488/items/7195222"}, {"k": "allday", "label": "올데이", "hrs": "12~22시", "p": [130000, 220000, 380000, 220000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1534488/items/7195276"}], "place": "https://naver.me/xLs3C1eA", "sc": "https://www.spacecloud.kr/space/75034", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (5층)", "door": "9580*", "ssid": "KT_GiGA_5G_714A", "wifi": "7dk38gg359", "route": "창천 민영 주차장 / 08:00~22:00 / 30분 3,000원 / 60분 3,000원 / 120분 6,000원 / 240분 12,000원 /  / 타이거 민영 주차장 / [모두의 주차장] / 5시간권(09:00~20:00) ->16,000원 / 심야권(21:00~익일09:00) ->18,000원 /  /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": "PC 게임 이용 지점 — 이용일 이틀 전까지 게임 목록(최대 4개) 사전 취합 후 공유"}, "demand": 1.194}, {"id": "S-15", "code": "S-15", "name": "영등포 플레이션", "shortName": "플레이션", "region": "서울", "area": "영등포", "addr": "서울시 영등포구 영중로 67-1, 지하1층", "type": "가맹", "owner": "박범주", "ownerRaw": "박범주 / 010-4535-3468", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [130000, 180000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1528476/items/7161442"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 180000, 250000, 130000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1528476/items/7161713"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [130000, 190000, null, 190000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1528476/items/7161728"}], "place": "https://naver.me/5v3GGSbX", "sc": "https://www.spacecloud.kr/space/74764", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "박범주 / 010-4535-3468", "sameday": "항상 가능", "parking": "주차 불가 /  / 1. 파킹137 민영주차장 (도보 3분) / 최초 30분 2,000원 / 추가 10분당 700원 / 일 최대 15,000원 / (현금 불가 - 24시간 무인주차장) /  / 2. 영등포 영남 공영주차장 (도보 9분) / 30분 960원 / 60분 1,920원 / 120분 3,840원 / 240분 7,680원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X 지하 1층", "door": "—", "ssid": "skCAD0_5G,2.4G", "wifi": "As4535**", "route": "영등포 시장역 4번출구 도보로 20m", "memo": ""}, "demand": 0.93}, {"id": "S-16", "code": "S-16", "name": "천호 사막여우", "shortName": "사막여우", "region": "서울", "area": "천호", "addr": "서울 강동구 천중로50길 39, 지하 1층", "type": "가맹", "owner": "윤수영", "ownerRaw": "윤수영 / 010-3207-3286 /  / 수요일은 답사 절대 불가", "resp": "모두 점주응대", "deposit": 50000, "depositLabel": "5만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 15, "priceDay": [70000, 70000, 80000, 80000], "priceNight": [110000, 200000, 220000, 110000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 80000, 80000], "base": 4, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/927561/items/5136503?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 4, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/927561/items/5136512?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [110000, 200000, 220000, 110000], "base": 4, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/927561/items/5136511?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, null, 310000, 150000], "base": 4, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/927561/items/5136512?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/5SBPQM3W", "sc": "https://www.spacecloud.kr/space/38221", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": "22시 이후 제한"}, "ops": {"resp": "모두 점주응대", "host": "윤수영 / 010-3207-3286 /  / 수요일은 답사 절대 불가", "sameday": "항상가능", "parking": "주차 가능 /  파티룸 건물 1대 무료 지원 / (카페 옆 쪽에 1대 가능, 이미 차있다면 불가) /  주차정보 전달 필수 (점주님 번호로) /  / *주차 고정아님 /  / 만차시 인근 공영주차장 이용필요 /  / 1) 태양식자재마트 민영주차장 / 1시간 2500원 /  / 2) 강동도서관 주차장 / 1시간 1800원 /  / 3) 한일빌딩 주차장 / 1시간 3000원 /  / ↑ 모두의주차장 어플 참고 / - /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "kt_GIGA_2G_Wave2_E028", "wifi": "xea3gh0441", "route": "길동역 2번 출구에서 318m /  희망어린이공원 바로 맞은편에 위치", "memo": ""}, "demand": 0.666}, {"id": "S-17", "code": "S-17", "name": "혜화 낙산파라도르", "shortName": "낙산파라도르", "region": "서울", "area": "혜화", "addr": "서울특별시 성북구 삼선교로4길 91", "type": "가맹", "owner": "조준혁", "ownerRaw": "조준혁  010-4056-8580 (점주님) / 손님 공개용 번호 : 010-9546-3880 (프렌드지) / - 점주 응대 어려운 시간 : 토요일 저녁 및 일요일 / 이전예약 없을 경우 1시간은 무료입실 가능 / (그 이전 입실 시 1시간당 2만원) / 인원추가 낮타임 1만원, 나머지 2만원 / 사전준비를 위한 답사만 가능 / 시간 추가 3시간까지만 가능 / (이상 추가를 원하면 다음 타임 예약해야 함) /  /  010-7731-2175 (관리매니저님) / 예약인원 변경, 바베큐 추가,  / 시간연장 등 문의는 알아서 처리 후  / (그렇게 하겠다고 톡으로 메시지만 남겨주심 됩니다).", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 30, "priceDay": [100000, 150000, 150000, 150000], "priceNight": [190000, 290000, 290000, 190000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [100000, 150000, 150000, 150000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/990312/items/5346990?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [190000, 290000, 290000, 190000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/990312/items/5347034?area=pll&lang=ko&theme=place"}, {"k": "tonight", "label": "투나잇", "hrs": "", "p": [150000, 220000, 220000, 180000], "base": 4, "max": 30, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "", "p": [190000, 400000, 400000, 300000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/990312/items/5347052?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FynX3sDG", "sc": "https://www.spacecloud.kr/space/54875", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "숯 5만원"}, "karaoke": {"on": true, "note": "22시 이후 제한"}, "ops": {"resp": "모두 점주응대", "host": "조준혁  010-4056-8580 (점주님) / 손님 공개용 번호 : 010-9546-3880 (프렌드지) / - 점주 응대 어려운 시간 : 토요일 저녁 및 일요일 / 이전예약 없을 경우 1시간은 무료입실 가능 / (그 이전 입실 시 1시간당 2만원) / 인원추가 낮타임 1만원, 나머지 2만원 / 사전준비를 위한 답사만 가능 / 시간 추가 3시간까지만 가능 / (이상 추가를 원하면 다음 타임 예약해야 함) /  /  010-7731-2175 (관리매니저님) / 예약인원 변경, 바베큐 추가,  / 시간연장 등 문의는 알아서 처리 후  / (그렇게 하겠다고 톡으로 메시지만 남겨주심 됩니다).", "sameday": "항상 가능 / (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차2대 무료  /  파티룸입구 마당1대 /  거주자우선 가-27번자리1대 /   /  그 외 : 30초 거리의 /  삼선동공영주차장 유료주차 /  (총 133대 가능) /   /  1시간 1,800원 /  2시간 3,600원 /  3시간 5,400원 /  일일 최대 만원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X / 건물전체이용", "door": "—", "ssid": "U+Net2478_5G", "wifi": "C0A#360GB0", "route": "한성대입구역 3번출구 나와서 직진 후 / 성북천카페와 바른샘치과 사이 골목에서 / 우회전하여 9분 정도 걸어오면 / 왼쪽에 낙산파라도르 위치", "memo": "투나잇 기재 규칙: 시간 19~24 / 시간이슈 19~24시 / 점주이슈 \"19~24시, 투나잇\". 특정 동아리(고대 너와나) 바베큐 무료 요청 시 점주 고지 후 메모"}, "demand": 1.073}, {"id": "S-18", "code": "S-18", "name": "홍대 겜플렉스", "shortName": "겜플렉스", "region": "서울", "area": "홍대", "addr": "서울시 마포구 독막로8길 19, 한스빌딩 지하1층", "type": "직영", "owner": "김동석", "ownerRaw": "김동석 / 010-6780-1227 /  / 고객 응대용 : 010-6443-4124", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [140000, 220000, 270000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/916249/items/5095582?area=ple&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [140000, 220000, 270000, 140000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/916249/items/5095589?area=ple&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [130000, 220000, null, 220000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/916249/items/5095741?area=ple&lang=ko&theme=place"}, {"k": "full", "label": "풀패키지", "hrs": "", "p": [null, null, 320000, null], "base": 4, "max": 12, "url": ""}], "place": "", "sc": "https://www.spacecloud.kr/space/22633", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "김동석 / 010-6780-1227 /  / 고객 응대용 : 010-6443-4124", "sameday": "당일 별도 문의", "parking": "주차 불가 /  / 바로 앞 / 당인공영노상주차장 / 11:00~22:00 / 5분당 300원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "U+Net14F0_5G", "wifi": "AF6F7@9KBD", "route": "상수역 4번출구에서 쭉 직진 후 메가커피에서 우회전, / 직진하여 데네브카페건물 지하 1층 / *골목쪽이 아닌 큰길가쪽 입구 / (한스빌딩 간판)", "memo": "26-04-22 듀플렉스 점주 인계. 시설 정보는 구 그리드 자료 기준이므로 최신 확인 필요. 주차 정산 방식이 특이하니 점주 정리자료 전달 후 추가 문의는 점주 안내"}, "demand": 0.809}, {"id": "S-19", "code": "S-19", "name": "홍대 오렌지카운티", "shortName": "오렌지카운티", "region": "서울", "area": "홍대", "addr": "서울시 마포구 어울마당로 46, 5층", "type": "가맹", "owner": "김현화", "ownerRaw": "김현화 010-8006-2776 (입실 후 문의 담당) / 박노열 010-9816-3214", "resp": "모두 점주응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 8, "maxP": 30, "priceDay": [90000, 90000, 110000, 110000], "priceNight": [180000, 270000, 320000, 180000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [90000, 90000, 110000, 110000], "base": 8, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942593/items/5186758?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [180000, 270000, 320000, 180000], "base": 8, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942593/items/5186786?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [160000, null, 500000, 220000], "base": 8, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/942593/items/5186799?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/5MCgWG6b", "sc": "https://www.spacecloud.kr/space/52756", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": "22시 이후 제한"}, "ops": {"resp": "모두 점주응대", "host": "김현화 010-8006-2776 (입실 후 문의 담당) / 박노열 010-9816-3214", "sameday": "항상 가능 / (안되는 날은 미리 당일 오전 내로 연락할 예정)", "parking": "불가 / - / 합정 1 공영주차장 (노상) / 운영시간 : 11:00-22:00 (월-일) / 5분당 500원 (카드) / https://naver.me/5tj4Dh2u /  / 당인 1,2 공영 주차장 (노상) / 운영시간 : 11:00-22:00 (월-일) / 5분당 300원 (카드) / https://naver.me/5h3JbLvz  /   / 카카오 T 서교동제4주차장 / [모두의 주차장] / 평일심야권(19:00~익일07:00) ->10,900원 / 평일당일권(00:00~23:59) ->19,900원 / 휴일당일권(00:00~23:59) ->27,900원 /  / 서교동 제4민영주차장 / 서울 마포구 서교동 400-9 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "KT_GiGA_2G_Wave2_B400", "wifi": "bd84ck0785", "route": "상수역 1번 출구에서 327m /  짬뽕지존 옆 정돈 건물 5층에 위치해있습니다.", "memo": "병류·음식물쓰레기는 지정 위치 직접 배출 안내문구 별도 발송(입실안내문자 외 1회 더 공유)"}, "demand": 1.216}, {"id": "S-20", "code": "S-20", "name": "구리 플레이션", "shortName": "플레이션", "region": "경기·인천", "area": "구리", "addr": "경기도 구리시 검배로6번길 15, 3층", "type": "가맹", "owner": "권민정", "ownerRaw": "권민정/ 010-2774-3130 / -- / 투폰(고객전달용) : 010-6592-0377", "resp": "모두 점주응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 30, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [120000, 180000, 240000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1285336/items/6366955?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 180000, 240000, 120000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1285336/items/6373993?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [150000, 200000, 300000, 200000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1285336/items/6374004?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GgWhQzLE", "sc": "https://www.spacecloud.kr/space/67699", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "권민정/ 010-2774-3130 / -- / 투폰(고객전달용) : 010-6592-0377", "sameday": "항상 가능 / (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차 불가. 2분 거리에 구리전통시장 공영주차장 1시간 1,000원 2시간 2,800원 4시간 6,400원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X (3층 계단이용)", "door": "—", "ssid": "KT_GiGA_5G_A160", "wifi": "0ke74cf600 / (0은 숫자 0)", "route": "구리역 7번출구로 나와 돌다리 사거리 지난 후 메가커피에서 우회전, 엑스탑 오락실 건물 3층에 위치해있습니다.", "memo": ""}, "demand": 0.952}, {"id": "S-21", "code": "S-21", "name": "남양주 뷰티풀모먼트", "shortName": "뷰티풀모먼트", "region": "경기·인천", "area": "남양주", "addr": "경기 남양주시 경춘로 508-4, 3층 328호", "type": "가맹", "owner": "오현성", "ownerRaw": "오현성 / 010-2954-0767(실관리) / 박미현 / 010-2954-4577", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 150000, 190000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1130930/items/5828814?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 150000, 190000, 130000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1130930/items/5854406?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, null, 270000, 170000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1130930/items/5854407?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FTqTF0IU", "sc": "https://www.spacecloud.kr/space/60310", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "오현성 / 010-2954-0767(실관리) / 박미현 / 010-2954-4577", "sameday": "O", "parking": "건물 3대 3시간까지(무료) / 추가금 10분당 1,000원 / 최대 3만원 / (무료주차 사전등록 차량번호 기재하여 / 아래 문의 번호로 꼭 연락필요 / 010-2954-0767) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "O / 3층", "door": "—", "ssid": "skyiptime C8B1", "wifi": "skylife8b1", "route": "전철 이용시 :  / 도농역 2번출구에서 도보 14분 / 전철+버스 이용시: /  도농역 2번출구 도농역(중) 승차 / (23, 97, 165, 10-5, 76, 91, 65, 30번...) / 1개 정류장 이동 - 다산2동주민센터 하차 후 도보 4분 /  / 차량 이용시  / 경춘로 508-4 더리더스타워 주차장 검색", "memo": ""}, "demand": 0.688}, {"id": "S-22", "code": "S-22", "name": "동탄 데일리가든", "shortName": "데일리가든", "region": "경기·인천", "area": "동탄", "addr": "경기 화성시 동탄영천로 105, 이든앤스페이스 4층", "type": "가맹", "owner": "서애영", "ownerRaw": "서애영 / 010-5420-0029", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [60000, 60000, 80000, 80000], "priceNight": [120000, 180000, 220000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 80000, 80000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1277687/items/6336345?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1277687/items/6347076?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 180000, 220000, 120000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1277687/items/6347039?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, 180000, 260000, 180000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1277687/items/6347076?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/x7nPtCGr", "sc": "https://www.spacecloud.kr/space/67434", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "O(상세: 시설)"}, "karaoke": {"on": true, "note": "전면 불가"}, "ops": {"resp": "모두 점주응대", "host": "서애영 / 010-5420-0029", "sameday": "항상 가능 / (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차 가능 /  파티룸 주차 1대 무료, 추가차량 금액 부과 /  주차정보 전달 필수 / ( 점주님 번호로 퇴실 1시간 전에 / 차량번호 전달 필수 ) /  /  / 추가 주차비용 1대당 /  / 낮타임 :PM 12시~PM17시 / 5시간이용 2500원 / 밤타임 : PM7시~AM10시 / 15시간 10,000원 / 올데이 : PM12~PM10시 / 10시간 6000원 / 3시간 : 1500원", "floor": "O", "door": "—", "ssid": "데일리가든1 / 데일리가든2", "wifi": "daily424! / daily424", "route": "이든앤스페이스 빌딩 4층에 있습니다. /   /  차량 이용 시 B2층 47번 기둥 맞은편 엘레베이터 이용 /  -> B2층 비상용 엘레베이터 9호기 이용 후 4층으로", "memo": ""}, "demand": 1.095}, {"id": "S-23", "code": "S-23", "name": "미사 디로우", "shortName": "디로우", "region": "경기·인천", "area": "미사", "addr": "경기 하남시 미사대로 456, 5층 514호", "type": "가맹", "owner": "김대승", "ownerRaw": "김대승 / 010-8635-5782", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 14, "priceDay": [70000, 70000, 80000, 80000], "priceNight": [100000, 170000, 220000, 100000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 80000, 80000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928231/items/5138958?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928231/items/5139054?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [100000, 170000, 220000, 100000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928231/items/5139041?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [100000, null, 300000, 140000], "base": 4, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928231/items/5139054?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GmVfaKdx", "sc": "https://www.spacecloud.kr/space/46392?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "김대승 / 010-8635-5782", "sameday": "점주 확인 필요 / (당일 예약시, 전등 및 오락기 등 고객이 직접 켜야함)", "parking": "지하주차장 자리있을 시 대수상관 X  / 1시간 무료 그외 1시간당 3천원 / (10시간 까지만 주차요금 발생 이후는 무료 / 최대 3만원 발생) / (주차 후 꼭 점주님께 문자 해야함) / ㄴ 주차등록은 차가 들어온다음 등록가능 / 미리 선연락해도 도움 주지 못함 / 꼭 주차등록을 해야 1시간 무료 적용 가능함", "floor": "O / 5층", "door": "—", "ssid": "U+Net1A50_5G", "wifi": "G4DB93#734", "route": "*도보 이용시 / 미사역 6번출구 방향, 직진 500m / 약7분 정도 걸으면 미사 광장 막다른 길에 횡단보도가 나옵니다. (횡단보도 건너편에 세븐일레븐과 롯데슈퍼가 보여요) 그 길을 건너 오른쪽 방향으로 조금 더 걷다보면 길 건너편에 1층에 시몬스침대, 4층 거궁 매장이 있는 갈색건물이 보입니다. / 5층 엘리베이터를 내려서 좌회전 하면 사진관 하나가 보이고 그 옆에 파티룸이 있습니다. /  /  / *자가용 이용시 / 미사리 경정공원 맞은편에 위치해있습니다. / 갈색건물이고, 1층에 시몬스침대, 4층에 거궁 매장이 있습니다.", "memo": "바베큐 옵션 미노출 상태(점주 사정) — 문의 시 확인 후 안내"}, "demand": 0.831}, {"id": "S-24", "code": "S-24", "name": "미사 패밀리가든", "shortName": "패밀리가든", "region": "경기·인천", "area": "미사", "addr": "경기 하남시 미사강변북로85번길 45, 지하 1층", "type": "가맹", "owner": "이지현", "ownerRaw": "이지현 / 010-4756-8525 (파트너센터 관련 내용) /  / 골프, 노래방 등 22시까지만 이용 가능 /  / - / 기존 전은규 점주에서 부인인 이지현 점주가  / 위임해서 전체 안내", "resp": "모두 점주응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [100000, 100000, 120000, 120000], "priceNight": [160000, 200000, 240000, 160000], "pkgs": [{"k": "day", "label": "낮", "hrs": "12~17시", "p": [100000, 100000, 120000, 120000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1183156/items/5981804?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~10시", "p": [160000, 200000, 240000, 160000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1183156/items/5982079?area=pll&lang=ko&theme=place"}, {"k": "tonight", "label": "투나잇", "hrs": "19~24시", "p": [120000, 150000, 200000, 120000], "base": 4, "max": 10, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "12~22시", "p": [180000, 240000, 300000, 200000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1183156/items/5982113?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GI3yhceO", "sc": "https://www.spacecloud.kr/space/63218", "pet": {"on": true, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "이지현 / 010-4756-8525 (파트너센터 관련 내용) /  / 골프, 노래방 등 22시까지만 이용 가능 /  / - / 기존 전은규 점주에서 부인인 이지현 점주가  / 위임해서 전체 안내", "sameday": "X / ( 절대 불가 )", "parking": "주차 지상 4대가능(무료) /  / - /  / 초과시 / Tmap주차 한강미사3차 현대클러스터 주차장 / 평일 당일권 9,000원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "ㅇ", "door": "—", "ssid": "kt_giga_b90f", "wifi": "adf10hb130", "route": "구산성지 성당에서 미사누리공원1호 방면 골목, 흰색 큰 건물에 위치하고 있습니다.", "memo": "취사 불가 지점. 인원 추가금 밤·투나잇·올데이 2만원. 미니 당구·탁구 보유"}, "demand": 1.238}, {"id": "S-25", "code": "S-25", "name": "부평 부평파티룸 게임", "shortName": "부평파티룸 게임", "region": "경기·인천", "area": "부평", "addr": "인천 부평구 삼산동 충선로203번길 24, 삼산프라자 7층 750호", "type": "가맹", "owner": "관리자", "ownerRaw": "관리자 010-2131-6215 /  / 이경주(점주) / 010-5668-2383", "resp": "모두 점주응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 10, "priceDay": [80000, 80000, 110000, 110000], "priceNight": [120000, 200000, 230000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 110000, 110000], "base": 6, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/990480/items/5347549?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 200000, 230000, 120000], "base": 6, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/990480/items/5347602?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, null, null, 180000], "base": 6, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/990480/items/5347669?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/G9tC2Ldc", "sc": "https://www.spacecloud.kr/space/54988", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": "전면 불가"}, "ops": {"resp": "모두 점주응대", "host": "관리자 010-2131-6215 /  / 이경주(점주) / 010-5668-2383", "sameday": "항상 가능 /  (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "해당 건물 주변 이면도로 무료주차가능 /  파티룸 건물 안 1대 10시간 무료 지원 / (이후 시간당 3천원 부과, 무인시스템) /  주차정보 전달 필수 (010-5668-2383) /  / - /  / 근처 공영주차장 /  / 고니샘공영주차장 (도보11분) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "O", "door": "—", "ssid": "SK _WiFiGIGAC023­_5G", "wifi": "1712061741.0", "route": "굴포천역 8번출구로 나와 세븐일레븐 골목쪽으로 쭉 직진 하시면 됩니다. BHC건물 7층에 위치해있습니다.", "memo": ""}, "demand": 0.974}, {"id": "S-26", "code": "S-26", "name": "분당 달빛정원", "shortName": "달빛정원", "region": "경기·인천", "area": "분당", "addr": "경기도 성남시 분당구 야탑로105번길 19, 5층", "type": "가맹", "owner": "권세희", "ownerRaw": "권세희/010-3565-0463", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 40, "priceDay": [70000, 70000, 100000, 100000], "priceNight": [140000, 220000, 270000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 100000, 100000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/928188/items/5138772?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 100000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/928188/items/5138782?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [140000, 220000, 270000, 140000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/928188/items/5138781?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, null, null, 180000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/928188/items/5138782?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/5P2VgnBV", "sc": "https://www.spacecloud.kr/space/46917?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "전기그릴"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "권세희/010-3565-0463", "sameday": "가능 / (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차가능  / 1대 지정주차석에만 가능 / 나머지는 비어있어도 주차 안 됨 /  / - / 빌딩 구조상 무조건 1대까지만 지원 / 초과시 인근 공영주차장 이용해야함(방문객포함) / ※ 여유 주차구역 절대 없음 ※ /  / 야탑 제1 환승 공영 주차장 / 1일 주차 6,000원 / 30분 400원 - 추가10분당 200원 /  / 맛고을공영주차장 / 1일 주차 6,000원 / 30분 400원 - 추가10분당 200원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X (계단이용)", "door": "—", "ssid": "KT_GIGA_5G_019F", "wifi": "08ff27kh80", "route": "치어스 호프집 5층  / 야탑역 1,2번 출구에서 5분거리  / 주차장 : 야탑역 공영주차장,  / 맛고을 공영주차장에서  / 도보 5분거리(건물에 주차1대 가능)", "memo": ""}, "demand": 0.71}, {"id": "S-27", "code": "S-27", "name": "수원 라운지화성", "shortName": "라운지화성", "region": "경기·인천", "area": "수원", "addr": "경기도 수원시 팔달구 정조로 771-1, 2층", "type": "위탁관리", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 30, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 180000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1211398/items/6089590?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 120000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1211398/items/6096426?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [130000, 180000, 250000, 130000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1211398/items/6096419?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 180000, 250000, 180000], "base": 4, "max": 30, "url": "https://booking.naver.com/booking/12/bizes/1211398/items/6096426?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/52RlwDD4", "sc": "https://www.spacecloud.kr/space/64520", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (2층)", "door": "1209*", "ssid": "KT_GIGA_5G_5386", "wifi": "hx4exh6023", "route": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 1.117}, {"id": "S-28", "code": "S-28", "name": "수원 별빛", "shortName": "별빛", "region": "경기·인천", "area": "수원", "addr": "경기도 수원시 팔달구 권광로175번길 103, 3층 301호", "type": "가맹", "owner": "신지우", "ownerRaw": "신지우 / 010-5550-7420", "resp": "모두 점주응대", "deposit": 50000, "depositLabel": "5만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [100000, 100000, 100000, 100000], "priceNight": [90000, 170000, 200000, 90000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [null, null, 100000, 100000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/928173/items/5138727?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/928173/items/5138734?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [90000, 170000, 200000, 90000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/928173/items/5138733?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [130000, 150000, 210000, 150000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/928173/items/5138734?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FAQL7jlZ", "sc": "https://www.spacecloud.kr/space/43300?type=search", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "전기그릴"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "신지우 / 010-5550-7420", "sameday": "항상 가능 /  (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차 불가 /  / 도보 3분거리 / 수원시청 제 2주차장 / 1일 주차요금 10,000원 / 최초 30분 무료, / 30분초과시 10분마다 500원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "O", "door": "—", "ssid": "KT_GiGA_5G_333C", "wifi": "5de21ez501", "route": "* 수원시청역 6번 출구에서 도보 7분 거리에 있습니다 /  * 자차이용시 내비게이션에 '동인빌딩' 검색 후 찾아오실 수 있습니다 /  * 1층에 소담비빔국수, 2층에 레드노래방이 있는 건물 3층입니다", "memo": "건물을 헷갈리는 고객이 많아 상세 약도 전달. 바베큐 쿠폰 사용 시 메모+점주이슈 기재"}, "demand": 0.853}, {"id": "S-29", "code": "S-29", "name": "수원 새로이", "shortName": "새로이", "region": "경기·인천", "area": "수원", "addr": "경기도 수원시 권선구 입북로 47, 성지빌딩 104호 (입북동)", "type": "가맹", "owner": "이용운", "ownerRaw": "이용운 / 010-7399-6361", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [50000, 50000, 60000, 60000], "priceNight": [80000, 120000, 140000, 100000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [50000, 50000, 60000, 60000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/931441/items/5149583?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [60000, null, null, 60000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/931441/items/5149595?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [80000, 120000, 140000, 100000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/931441/items/5149594?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [80000, 180000, 200000, 120000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/931441/items/5149595?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/5t4cgrTY", "sc": "https://www.spacecloud.kr/space/46956?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": "23시 이후 제한"}, "ops": {"resp": "모두 점주응대", "host": "이용운 / 010-7399-6361", "sameday": "항상가능", "parking": "O (건물 뒷편 무료 6대 정도)", "floor": "1층", "door": "—", "ssid": "더 새로이", "wifi": "312926361.0", "route": "서수원자이아파트 정류장 하차 후 바로 보이는 건물입니다. 1층", "memo": "노래방 23시까지"}, "demand": 1.26}, {"id": "S-30", "code": "S-30", "name": "수원 수피다팔달", "shortName": "수피다팔달", "region": "경기·인천", "area": "수원", "addr": "경기도 수원시 팔달구 정조로 771-1, 4층", "type": "위탁관리", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 25, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 180000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1282875/items/6357202?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 120000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1282875/items/6358635?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [130000, 180000, 250000, 130000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1282875/items/6358601?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 180000, 250000, 180000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1282875/items/6358635?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/52R80lee", "sc": "https://www.spacecloud.kr/space/67651", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (4층)", "door": "1459*", "ssid": "KT_GIGA_5G_F6EB", "wifi": "eeb05ch342", "route": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 0.996}, {"id": "S-31", "code": "S-31", "name": "수원 스테이행궁", "shortName": "스테이행궁", "region": "경기·인천", "area": "수원", "addr": "경기도 수원시 팔달구 정조로 771-1, 3층", "type": "위탁관리", "owner": "본사", "ownerRaw": "본사 예약팀 010-2254-9580", "resp": "본사(직영)", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 20, "priceDay": [70000, 70000, 90000, 90000], "priceNight": [130000, 180000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 90000, 90000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1211279/items/6089125?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 120000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1211279/items/6096418?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [130000, 180000, 250000, 130000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1211279/items/6096414?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 180000, 250000, 180000], "base": 4, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/1211279/items/6096418?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GublwtNt", "sc": "https://www.spacecloud.kr/space/64521", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "본사(직영)", "host": "본사 예약팀 010-2254-9580", "sameday": "본사 확인", "parking": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "floor": "O (3층)", "door": "0923*", "ssid": "KT_GIGA_5G_53A4", "wifi": "dx4exh6029", "route": "남창동 임시주차장 / 경기 수원시 팔달구 남창동 134-10 / 임시로 개방하는 무료주차장 / 도보 2분 /  / 교동공영주차장 / 도보:6분 / 운영시간 : 24시 / 최초30분 600원 초과 10분당 300원 일일요금 7000원 /  / 상황에 따라 조금씩차이있을 수 있으니 반드시 검색 후 운영시간 / 금액 재확인 부탁드립니다.", "memo": ""}, "demand": 0.732}, {"id": "S-32", "code": "S-32", "name": "수원 인계겜플렉스", "shortName": "인계겜플렉스", "region": "경기·인천", "area": "수원", "addr": "경기 수원시 팔달구 인계로124번길 27-10, 엘리시아IT타워 1403호", "type": "직영", "owner": "—", "ownerRaw": "—", "resp": "—", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [80000, 80000, 100000, 100000], "priceNight": [140000, 220000, 270000, 140000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 100000, 100000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1543279/items/7217680"}, {"k": "night", "label": "밤", "hrs": "", "p": [140000, 220000, 270000, 140000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1543279/items/7233925"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [130000, 220000, null, 220000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1543279/items/7233939"}], "place": "https://naver.me/517IVMMh", "sc": "https://www.spacecloud.kr/space/75395", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "—", "host": "—", "sameday": "—", "parking": "—", "floor": "O / (지하주차장부터 전층 운행)", "door": "—", "ssid": "KT_GiGA_5G_B59B", "wifi": "c1bc07df76", "route": "자차 이용시 : 엘리시아IT타워 검색 /  수원시청역 6번,8번출구에서 약 500m거리에 위치 /  육회천지 옆 출입문으로 들어오시면 됩니다.", "memo": ""}, "demand": 1.139}, {"id": "S-33", "code": "S-33", "name": "수원 인계겜플렉스 5호점", "shortName": "인계겜플렉스 5호점", "region": "경기·인천", "area": "수원", "addr": "확인要", "type": "직영", "owner": "—", "ownerRaw": "—", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [70000, 70000, 80000, 80000], "priceNight": [120000, 200000, 230000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 80000, 80000], "base": 4, "max": 10, "url": ""}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 200000, 230000, 120000], "base": 4, "max": 10, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 200000, null, 200000], "base": 4, "max": 10, "url": ""}], "place": "", "sc": "", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "—", "sameday": "당일 별도 문의", "parking": "주차는 건물 B1~B4에 가능합니다. / 야간권 10,000원 (17:00~익일10:00) / 야간권+1시간권 적용 / 4시간권 3,000원 / 2시간 2,000원 한 번 입차시 최대 8시간까지 적용가능(추가시 회차해야함) / 오후 10시 전까지 입차 및 주차권 적용 완료해야 합니다. / ★야간권 적용 필수사항★ / -오후 5시 이전에 입차시 건물 주차장 관리 시스템상 야간권 적용이 안됩니다. / -추가사항은 꼭 사전에 말씀해주시고 주차장 시스템적용 확인 하신후에 출차하셔야 합니다", "floor": "ㅇ", "door": "—", "ssid": "U+Net859D_5G", "wifi": "690D1D18M#", "route": "자차 이용시 : 주소 검색 / 수원시청역 6번,8번출구에서 약 500m거리에 위치", "memo": ""}, "demand": 0.875}, {"id": "S-34", "code": "S-34", "name": "수원 인계겜플렉스 프리미엄점 3호점", "shortName": "인계겜플렉스 프리미엄점 3호점", "region": "경기·인천", "area": "수원", "addr": "확인要", "type": "직영", "owner": "—", "ownerRaw": "—", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 18, "priceDay": [80000, 80000, 110000, 110000], "priceNight": [160000, 270000, 310000, 160000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 110000, 110000], "base": 4, "max": 18, "url": ""}, {"k": "night", "label": "밤", "hrs": "", "p": [160000, 270000, 310000, 160000], "base": 4, "max": 18, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "", "p": [160000, 240000, null, 240000], "base": 4, "max": 18, "url": ""}], "place": "", "sc": "", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "—", "sameday": "당일 별도 문의", "parking": "주차는 옆 건물 B1~B4에 가능합니다. / 야간권 10,000원 (17:00~익일10:00) / 야간권+1시간권 적용 / 4시간권 3,000원 / 2시간 2,000원 한 번 입차시 최대 8시간까지 적용가능(추가시 회차해야함) / 오후 10시 전까지 입차 및 주차권 적용 완료해야 합니다. / ★야간권 적용 필수사항★ / -오후 5시 이전에 입차시 건물 주차장 관리 시스템상 야간권 적용이 안됩니다. / -추가사항은 꼭 사전에 말씀해주시고 주차장 시스템적용 확인 하신후에 출차하셔야 합니다", "floor": "ㅇ", "door": "—", "ssid": "KT_GIGA_5G_4D47", "wifi": "ce3fcf9042", "route": "자차 이용시 : 주소 검색 / 수원시청역 6번,8번출구에서 약 500m거리에 위치", "memo": ""}, "demand": 0.611}, {"id": "S-35", "code": "S-35", "name": "수원 인계겜플렉스 프리미엄점 4호점", "shortName": "인계겜플렉스 프리미엄점 4호점", "region": "경기·인천", "area": "수원", "addr": "확인要", "type": "직영", "owner": "—", "ownerRaw": "—", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 18, "priceDay": [80000, 80000, 110000, 110000], "priceNight": [160000, 270000, 310000, 160000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 110000, 110000], "base": 4, "max": 18, "url": ""}, {"k": "night", "label": "밤", "hrs": "", "p": [160000, 270000, 310000, 160000], "base": 4, "max": 18, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "", "p": [160000, 240000, null, 240000], "base": 4, "max": 18, "url": ""}], "place": "", "sc": "", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "—", "sameday": "당일 별도 문의", "parking": "주차는 옆 건물 B1~B4에 가능합니다. / 야간권 10,000원 (17:00~익일10:00) / 야간권+1시간권 적용 / 4시간권 3,000원 / 2시간 2,000원 한 번 입차시 최대 8시간까지 적용가능(추가시 회차해야함) / 오후 10시 전까지 입차 및 주차권 적용 완료해야 합니다. / ★야간권 적용 필수사항★ / -오후 5시 이전에 입차시 건물 주차장 관리 시스템상 야간권 적용이 안됩니다. / -추가사항은 꼭 사전에 말씀해주시고 주차장 시스템적용 확인 하신후에 출차하셔야 합니다", "floor": "ㅇ", "door": "—", "ssid": "KT_GIGA_5G_4D47", "wifi": "ce3fcf9042", "route": "자차 이용시 : 주소 검색 / 수원시청역 6번,8번출구에서 약 500m거리에 위치", "memo": ""}, "demand": 1.018}, {"id": "S-36", "code": "S-36", "name": "수원 인계겜플렉스2호점", "shortName": "인계겜플렉스2호점", "region": "경기·인천", "area": "수원", "addr": "경기 수원시 팔달구 인계로124번길 27-10, 엘리시아IT타워 518호", "type": "직영", "owner": "—", "ownerRaw": "—", "resp": "—", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 10, "priceDay": [70000, 70000, 80000, 80000], "priceNight": [120000, 200000, 230000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 80000, 80000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1361234/items/6571677"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 200000, 230000, 120000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1361234/items/6824739"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [120000, 200000, null, 200000], "base": 4, "max": 10, "url": "https://booking.naver.com/booking/12/bizes/1361234/items/6824783"}], "place": "https://naver.me/5UEfpmRJ", "sc": "https://www.spacecloud.kr/space/71924", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "—", "host": "—", "sameday": "—", "parking": "—", "floor": "O / (지하주차장부터 전층 운행)", "door": "—", "ssid": "KT_GiGA_5G_3B0C", "wifi": "dfe56bd981", "route": "자차 이용시 : 엘리시아IT타워 검색 /  수원시청역 6번,8번출구에서 약 500m거리에 위치 /  육회천지 옆 출입문으로 들어오시면 됩니다.", "memo": ""}, "demand": 0.754}, {"id": "S-37", "code": "S-37", "name": "수원 인계듀플렉스", "shortName": "인계듀플렉스", "region": "경기·인천", "area": "수원", "addr": "경기 수원시 팔달구 인계로124번길 27-10, 엘리시아IT타워 1124호", "type": "직영", "owner": "김동석", "ownerRaw": "김동석 / 010-6780-1227 /  / 고객 응대용 : 010-6443-4124", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 12, "priceDay": [60000, 60000, 80000, 80000], "priceNight": [120000, 150000, 190000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 80000, 80000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1356040/items/6552646?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 90000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1356040/items/6552988?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 150000, 190000, 120000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1356040/items/6552972?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, 180000, 190000, 180000], "base": 4, "max": 12, "url": "https://booking.naver.com/booking/12/bizes/1356040/items/6552988?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xY48jKjD", "sc": "https://www.spacecloud.kr/space/69497", "pet": {"on": false, "note": ""}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "김동석 / 010-6780-1227 /  / 고객 응대용 : 010-6443-4124", "sameday": "당일 별도 문의", "parking": "건물 B1~B4에 가능 /  '차량 1대만 4시간 주차권 1장 무료지원' / 초과차량/시간추가는 추가요금 발생(자리 있다면 주차 대수는 상관 없음) /  / 최초 10분 무료(회차시간) / 일반 추가요금 30분 3,000원 / 60분 6,000원 / 발렛파킹 불가 /  /  - 야간권 : 17시~익일10시 / 6,000원 /  - 시간권 : 4시간 1,000원 / 2시간 500원 /  / 1대에 한해서만 4시간권 1장 무료지원, 초과시간/차량은 모든 요금 지불필요 /  - 밤타임 이용자 : 야간권 구매 권장 /  - 낮타임 이용자 : 4시간권, 2시간권 각 1장 구매 권장 /  - 올데이(10시간) : 4시간권, 2시간권 각 1장 구매 -> 17시에 회차 -> 4시간권, 2시간권 각 1장 추가 구매 /  /  *시간권은 최대 8시간까지만 적용 가능(8시간 이상은 회차) /  *입차 후 입실안내 內 점주님번호로 차량번호를 알려주셔야 합니다. /  *출차 전 반드시 점주에게 주차권 적용이 되었는지 확인문자를 받고 출차하셔야 합니다. /  *모든 주차권은 한 번 출차하게되면 소멸되니, 신중하게 판단하여 출차하시기 바랍니다. /  *모든 주차권은 23시 전까지 입차된 차량만 적용 가능하며 최대 2개 적용 가능", "floor": "O / (지하주차장부터 전층 운행)", "door": "—", "ssid": "KT_GIGA_5G_CE6C", "wifi": "f9ge91zi51", "route": "자차 이용시 : 엘리시아IT타워 검색 /  수원시청역 6번,8번출구에서 약 500m거리에 위치 /  육회천지 옆 출입문으로 들어오시면 됩니다.", "memo": "주차 정산 방식 특이 — 점주 정리자료 전체 전달 후 추가 문의는 점주에게. 보증금 차감시트 제출이 늦는 편이라 수요일 오전까지 확인 요청"}, "demand": 1.161}, {"id": "S-38", "code": "S-38", "name": "안양 오로라", "shortName": "오로라", "region": "경기·인천", "area": "안양", "addr": "경기도 안양시 만안구 장내로139번길 27, 4층", "type": "가맹", "owner": "최동혁", "ownerRaw": "최동혁 010-3086-2966", "resp": "모두 점주응대", "deposit": 50000, "depositLabel": "5만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 14, "priceDay": [60000, 60000, 80000, 80000], "priceNight": [110000, 160000, 180000, 110000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 80000, 80000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928368/items/5139158?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928368/items/5139168?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [110000, 160000, 180000, 110000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928368/items/5139167?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, 180000, 280000, 150000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928368/items/5139168?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/FBQPsYGT", "sc": "https://www.spacecloud.kr/space/42182?type=search", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "최동혁 010-3086-2966", "sameday": "O (항상가능)", "parking": "주차 불가 /  / 안양역 공영주차장 / 최초 30분 600원 / 1시간까지 10분마다 300원 / 2시간까지 10분마다 600원 / 3시간까지 10분마다 900원 / 3시간이후 10분마다 1,200원 / 일일최대요금 25,000원 / - / 안양역2 노상 공영주차장 / 1시간 2,580원 / 2시간 6,540원 / 4시간 17,700원 / 10:00~22:00 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X / 4층", "door": "—", "ssid": "U+NetE35C_5G", "wifi": "KA2D2#7366", "route": "안양역 1번 출구에서 389m /  먹자골목 시선이자카야, 명가돈까스 맞은편 건물 출입구 4층", "memo": ""}, "demand": 0.897}, {"id": "S-39", "code": "S-39", "name": "안양 오아시스", "shortName": "오아시스", "region": "경기·인천", "area": "안양", "addr": "경기도 안양시 만안구 장내로139번길 27, 3층", "type": "가맹", "owner": "—", "ownerRaw": "—", "resp": "모두 점주응대", "deposit": 50000, "depositLabel": "5만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 14, "priceDay": [60000, 60000, 80000, 80000], "priceNight": [110000, 160000, 180000, 110000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 80000, 80000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928402/items/5139229?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928402/items/5139236?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [110000, 160000, 180000, 110000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928402/items/5139235?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [110000, 180000, 280000, 150000], "base": 6, "max": 14, "url": "https://booking.naver.com/booking/12/bizes/928402/items/5139236?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xJaHJf4C", "sc": "https://www.spacecloud.kr/space/44108?type=search", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": false, "note": ""}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "—", "sameday": "O (항상가능)", "parking": "주차 불가 /  / 안양역 공영주차장 / 최초 30분 600원 / 1시간까지 10분마다 300원 / 2시간까지 10분마다 600원 / 3시간까지 10분마다 900원 / 3시간이후 10분마다 1,200원 / 일일최대요금 25,000원 / - / 안양역2 노상 공영주차장 / 1시간 2,580원 / 2시간 6,540원 / 4시간 17,700원 / 10:00~22:00 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X / 3층", "door": "—", "ssid": "U+Net8CBC_5G", "wifi": "@E210C6PD2", "route": "안양역 1번 출구에서 389m /  먹자골목 시선이자카야, 명가돈까스 맞은편 건물 출입구 3층", "memo": ""}, "demand": 0.633}, {"id": "S-40", "code": "S-40", "name": "월미도 오션테라스", "shortName": "오션테라스", "region": "경기·인천", "area": "월미도", "addr": "인천 중구 월미로226번길 10, 8층 802호", "type": "가맹", "owner": "임규한", "ownerRaw": "임규한 / 010-6329-5261", "resp": "모두 점주 응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 25, "priceDay": [80000, 80000, 110000, 110000], "priceNight": [120000, 160000, 180000, 120000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [80000, 80000, 110000, 110000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1329956/items/6461943?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [80000, null, null, 100000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1329956/items/6463102?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [120000, 160000, 180000, 120000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1329956/items/6463068?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [140000, 180000, 210000, 180000], "base": 4, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/1329956/items/6463102?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/5iTV2gOG", "sc": "https://www.spacecloud.kr/space/68648", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "임규한 / 010-6329-5261", "sameday": "O", "parking": "건물내 주차가능 / 5대까지 이용시간+30분 무료 / 이후 5분당 500원 / (입실 이후 점주님께 주차등록 필수) / - / 만차시 인근 공영주차장 이용필요 /  / 1) 인근 공영주차장 1일 3천원 (주말 5천원) / 2) 월미도 제2공영주차장 / 1시간 1,200원 / 2시간 2,400원 / 4시간 4,800원 /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "O", "door": "—", "ssid": "KT-GIGA 5G FF21", "wifi": "6hc01xx798", "route": "빌딩명 : 월미오션테라스 / 자차 이용 시 : 주소 검색 / (인천 중구 월미로 226번길 10, 8층 802호) / 대중교통 이용 시 / - 인천역에서 2번, 10번 버스 : '월미도(시티투어)' / 하차 후 '월미도 뽀로로 테마파크' 후문 쪽으로 / - 인천역에서 45번 버스 : '월미도 종점' 하차 후 / '월미도 뽀로로 테마파크' 후문 쪽으로", "memo": ""}, "demand": 1.04}, {"id": "S-41", "code": "S-41", "name": "의왕 벨루체", "shortName": "벨루체", "region": "경기·인천", "area": "의왕", "addr": "경기도 의왕시 학현로 49, 1층", "type": "가맹", "owner": "윤민아", "ownerRaw": "윤민아 / 010-3312-7436 / 정성훈(남편분) / 010-3409-7436", "resp": "모두 점주 응대", "deposit": 100000, "depositLabel": "10만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 4, "maxP": 35, "priceDay": [180000, 180000, 200000, 200000], "priceNight": [250000, 350000, 450000, 250000], "pkgs": [{"k": "day", "label": "낮", "hrs": "12~17시", "p": [180000, 180000, 200000, 200000], "base": 4, "max": 35, "url": "https://booking.naver.com/booking/12/bizes/1380437/items/6636134?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~10시", "p": [250000, 350000, 450000, 250000], "base": 4, "max": 35, "url": "https://booking.naver.com/booking/12/bizes/1380437/items/6654136?area=pll&entry=pll&lang=ko&theme=place"}, {"k": "tonight", "label": "투나잇", "hrs": "19~24시", "p": [200000, 250000, 350000, 250000], "base": 4, "max": 35, "url": ""}, {"k": "allday", "label": "올데이", "hrs": "12~22시", "p": [250000, 350000, 450000, 350000], "base": 4, "max": 35, "url": "https://booking.naver.com/booking/12/bizes/1380437/items/6654171?area=pll&entry=pll&lang=ko&theme=place"}], "place": "https://naver.me/50JbwSrE", "sc": "https://www.spacecloud.kr/space/70473", "pet": {"on": true, "note": "O·4만"}, "bbq": {"on": true, "note": "O(상세: 시설)"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주 응대", "host": "윤민아 / 010-3312-7436 / 정성훈(남편분) / 010-3409-7436", "sameday": "항상 가능 /  (안되는 날은 미리 당일 오전내로 연락할 예정)", "parking": "주차 가능 /  파티룸 건물 안 10대 무료 지원", "floor": "없음", "door": "—", "ssid": "KT_GIGA_5G_1C66", "wifi": "fd23zh8549", "route": "자차이용시 : 의왕시 학현로 49 /  버스 이용시 : 06-1A (배차간격 55분) 103번 /  1303번, 7002번, 14번 (새터마을) 하차 후 도보7분 단독건물입니다.", "memo": "시간 추가 시 시간당 5만원(기본 2만원 아님). 투나잇 패키지 운영"}, "demand": 0.776}, {"id": "S-42", "code": "S-42", "name": "대전 화양연화", "shortName": "화양연화", "region": "지방", "area": "대전", "addr": "대전광역시 중구 대종로 465-1, 4층", "type": "가맹", "owner": "김현성", "ownerRaw": "김현성 / 010-3333-2832 /  / ( 25년 8월 /  기존 최성군 점주에서 -> 김현성 점주로 변경됨) / - / 급한 내용은 전화", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 40, "priceDay": [70000, 70000, 120000, 120000], "priceNight": [130000, 250000, 290000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 120000, 120000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/917244/items/5098054?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [90000, null, null, 100000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/917244/items/5098109?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [130000, 250000, 290000, 130000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/917244/items/5098093?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [150000, 220000, 400000, 180000], "base": 6, "max": 40, "url": "https://booking.naver.com/booking/12/bizes/917244/items/5098109?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/F7Ir6xa4", "sc": "https://www.spacecloud.kr/space/50801?type=search", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "김현성 / 010-3333-2832 /  / ( 25년 8월 /  기존 최성군 점주에서 -> 김현성 점주로 변경됨) / - / 급한 내용은 전화", "sameday": "사전연락요망", "parking": "주차불가 /   / 1. 평생학습관 주차장(무료) / - 지상 : 상시 / - 지하 : 평일(18시~21시30분) / 토/공휴일(8시30분~21시30분) / - 항상 만차로 주차가 어려우며 자체행사시 미개방 /  / 2. 노상주차장 / - 평일 08시~22시 : 10분당 300원 / - 이외 무료 /  / 3. 우리들공원 주차장(지하) / - 30분당 1,100원(신용카드전용)) / - 성심당 이용객(1만원이상 1시간무료 / 2만원이상 2시간무료) / - 지하상가 이용객(최대 2시간무료) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "O (단, 1층 한의원을 통해 이용) / 한의원 운영시간에만 이용가능 / (평일9-19시, 화목9-20시, 토9시-16시)", "door": "—", "ssid": "KT_GiGA_221A", "wifi": "5df7chf189", "route": "대전 중앙로역 3번 출구에서 255m / 쭉 직진(대흥동성당 지나 밝은침한의원 건물 4층)", "memo": ""}, "demand": 1.183}, {"id": "S-43", "code": "S-43", "name": "부산 파티세븐 3층", "shortName": "파티세븐 3층", "region": "지방", "area": "부산", "addr": "부산 중구 광복로 16, 3층", "type": "가맹", "owner": "임종성(옥인선)", "ownerRaw": "임종성(옥인선) / 010-7400-8283 /  / 3층 1시간 추가 2만원 / 4층 1시간 추가 1만5천원 / 최대 2시간까지만 추가가능, 3시간 이상 추가시 다음 타임 예약해야함 /  / 이른 입실 및 시간 연장은 고객 안내 전 점주 확인 필요 /  / 짐보관 문의 시 안내하지 말고 바로 점주님께 인계", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 25, "priceDay": [90000, 90000, 150000, 150000], "priceNight": [150000, 240000, 290000, 150000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [90000, 90000, 150000, 150000], "base": 6, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5131231?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [150000, 240000, 290000, 150000], "base": 6, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5131237?area=pll&lang=ko&theme=place"}, {"k": "tonight", "label": "투나잇", "hrs": "19~24시", "p": [120000, 210000, 260000, 120000], "base": 6, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/925970/items/6005948?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [190000, 240000, 290000, 290000], "base": 6, "max": 25, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5988443?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GjGWPK4J", "sc": "https://www.spacecloud.kr/space/45116?type=search", "pet": {"on": true, "note": "O·3만"}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "임종성(옥인선) / 010-7400-8283 /  / 3층 1시간 추가 2만원 / 4층 1시간 추가 1만5천원 / 최대 2시간까지만 추가가능, 3시간 이상 추가시 다음 타임 예약해야함 /  / 이른 입실 및 시간 연장은 고객 안내 전 점주 확인 필요 /  / 짐보관 문의 시 안내하지 말고 바로 점주님께 인계", "sameday": "부분적으로 가능(유선상 협의 후 예약확정 요망)(5시 이후 예약은 2시간 소요)", "parking": "X /  /  1. 부산시 중구 광복로 16 / 건물 앞 길거리 공영주차장 /   (1시간/3000원) / (밤 10시~오전 10시 까지 무과금) /  /  2. 부산시 서구청 공영주차장 /   (1시간/3000원) (일주차/21000원) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "O (실내에 기재됨)", "wifi": "O (실내에 기재됨)", "route": "자갈치역 3번출구에서 좌측 국제시장 사거리 방면으로 쭉 직진 후 생활 맥주 골목 옆으로 오시면 됩니다. /  / 입구를 못찾겠다는 고객 : 큰길이 아니라 생활맥주 옆에 골목으로 들어와야 입구가 있다고 안내", "memo": ""}, "demand": 0.919}, {"id": "S-44", "code": "S-44", "name": "부산 파티세븐 4층", "shortName": "파티세븐 4층", "region": "지방", "area": "부산", "addr": "부산 중구 광복로 16, 4층", "type": "가맹", "owner": "—", "ownerRaw": "—", "resp": "모두 점주응대", "deposit": 80000, "depositLabel": "8만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 15, "priceDay": [70000, 70000, 130000, 130000], "priceNight": [130000, 200000, 250000, 130000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [70000, 70000, 130000, 130000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5131238?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "19~09시", "p": [130000, 200000, 250000, 130000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5131239?area=pll&lang=ko&theme=place"}, {"k": "tonight", "label": "투나잇", "hrs": "19~24시", "p": [100000, 170000, 220000, 100000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/925970/items/6005953?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [150000, 200000, 250000, 250000], "base": 6, "max": 15, "url": "https://booking.naver.com/booking/12/bizes/925970/items/5988449?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/GjGWPK4J", "sc": "https://www.spacecloud.kr/space/45119?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "—", "sameday": "—", "parking": "X /  /  1. 부산시 중구 광복로 16 / 건물 앞 길거리 공영주차장 /   (1시간/3000원) / (밤 10시~오전 10시 까지 무과금) /  /  2. 부산시 서구청 공영주차장 /   (1시간/3000원) (일주차/21000원) /  / 단순 도보추천순으로 웹지도 참고하여 기재해둔터라, / 요금/운영시간 현장상황에 따라 상이할 수 있으니 / ※ 반드시 직접 재확인 후 공영주차장 이용해주셔야 합니다. / 실시간 변동사항을 모두 확인하기 어려운 점 양해 부탁드립니다.", "floor": "X", "door": "—", "ssid": "O (실내에 기재됨)", "wifi": "O (실내에 기재됨)", "route": "자갈치역 3번출구에서 좌측 국제시장 사거리 방면으로 쭉 직진 후 생활 맥주 골목 옆으로 오시면 됩니다. /  / 입구를 못찾겠다는 고객 : 큰길이 아니라 생활맥주 옆에 골목으로 들어와야 입구가 있다고 안내", "memo": ""}, "demand": 0.655}, {"id": "S-45", "code": "S-45", "name": "전주 아모르", "shortName": "아모르", "region": "지방", "area": "전주", "addr": "전북 전주시 덕진구 사근1길 37, 3층 302호", "type": "가맹", "owner": "정혜영", "ownerRaw": "정혜영/010-2882-3322", "resp": "모두 점주응대", "deposit": 50000, "depositLabel": "5만원", "addFee": 10000, "addFeeLabel": "1인당 1만원", "baseP": 6, "maxP": 20, "priceDay": [60000, 60000, 80000, 80000], "priceNight": [100000, 150000, 190000, 100000], "pkgs": [{"k": "day", "label": "낮", "hrs": "", "p": [60000, 60000, 80000, 80000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/928665/items/5139908?area=pll&lang=ko&theme=place"}, {"k": "hour3", "label": "3시간", "hrs": "", "p": [70000, null, null, 80000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/928665/items/5140037?area=pll&lang=ko&theme=place"}, {"k": "night", "label": "밤", "hrs": "", "p": [100000, 150000, 190000, 100000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/928665/items/5140036?area=pll&lang=ko&theme=place"}, {"k": "allday", "label": "올데이", "hrs": "", "p": [90000, 150000, 290000, 140000], "base": 6, "max": 20, "url": "https://booking.naver.com/booking/12/bizes/928665/items/5140037?area=pll&lang=ko&theme=place"}], "place": "https://naver.me/xNl7B0WX", "sc": "https://www.spacecloud.kr/space/45443?type=search", "pet": {"on": false, "note": ""}, "bbq": {"on": true, "note": "숯 3만원"}, "karaoke": {"on": true, "note": ""}, "ops": {"resp": "모두 점주응대", "host": "정혜영/010-2882-3322", "sameday": "항상가능( 안되는 날은 미리 연락할 예정)", "parking": "파티룸 건물 지하에 무료 주차 가능 /  / (지상4대 지하13대,  / 부족할 시 쿠우쿠우 야외주차가능)", "floor": "O", "door": "—", "ssid": "amor", "wifi": "15443523.0", "route": "오송초등학교 뒷편 센텀시티건물에 있습니다. / 와인앤글라스건물 3층에 위치해있습니다.", "memo": ""}, "demand": 1.062}];
+
+  const SITE={ tel:"1544-3523", kakao:"http://pf.kakao.com/_mufLd",
+    hours:"월~목 10~19시 · 금~일 10~22시", src:"운영관리 총괄표 · 최종본 (260815)" };
+
+  const branches = REAL.map(r => {
+    const rooms = [{ id:r.code+"-1", name:r.shortName, visible:true }];
+    return { id:r.id, code:r.code, name:r.name, shortName:r.shortName,
+      region:r.region, area:r.area, addr:r.addr, type:r.type,
+      owner:r.owner, ownerRaw:r.ownerRaw, resp:r.resp,
+      deposit:r.deposit, depositLabel:r.depositLabel,
+      addFee:r.addFee, addFeeLabel:r.addFeeLabel,
+      baseP:r.baseP, maxP:r.maxP, pkgs:r.pkgs,
+      place:r.place, sc:r.sc, pet:r.pet, bbq:r.bbq, karaoke:r.karaoke, ops:r.ops,
+      priceDay:r.priceDay, priceNight:r.priceNight,
+      rooms, demand:r.demand, tier: r.priceNight[2]>=200000?1: r.priceNight[2]>=140000?2:3,
+      openH:11, closeH:24 };
+  });
   const branchById = Object.fromEntries(branches.map(b=>[b.id,b]));
 
-  /* ── 가격표 ── */
-  const PRICE = { 1:{day:139000, night:189000}, 2:{day:119000, night:159000}, 3:{day:99000, night:139000} };
-  function priceOf(b, slot, hours, extra){
-    const base = slot==="day" ? PRICE[b.tier].day : PRICE[b.tier].night;
-    const perH = Math.round(base/ (slot==="day"?5:5));
-    const t = (hours===5? base : perH*hours);
-    return t + extra*P.extraFee;
-  }
-
-  /* 공간 상세 — 홈페이지 노출 정보 (공간 관리 화면에서 수정, 수정분이 신규 수기 예약 금액에 반영) */
-  const ROOM_HUE={그레이스톤:"#8E8B86",클레이:"#C96F4A",테라코타:"#B9552F",샌드:"#D8C29A",아이보리:"#E4DCCB",
-    차콜:"#4A4642",세이지:"#9AAB8F",오크:"#A97E4F",린넨:"#D9CFC0",코튼:"#E8E4DC",모카:"#8A6248",앰버:"#D99A3D"};
-  branches.forEach(b=>b.rooms.forEach(room=>{
-    room.priceDay=PRICE[b.tier].day; room.priceNight=PRICE[b.tier].night;
-    room.baseP=P.basePeople; room.maxP=weighted([[8,3],[10,4],[12,3],[16,1]]);
-    room.desc=`${room.name} 톤의 프라이빗 파티룸 — 기준 ${P.basePeople}인, 추가 인원은 1인 1만원`;
-    room.hue=ROOM_HUE[room.name]||"#C9C4BF"; room.photo=""; room.active=true;
-  }));
-  function roomPrice(b, room, slot, hours, extra){
-    const base = slot==="day" ? (room.priceDay||PRICE[b.tier].day) : (room.priceNight||PRICE[b.tier].night);
+  /* ── 요금 — 시트의 요일별 4단 요금 (월~목 / 금 / 토 / 일) ── */
+  const wdIdx = d => { const n=d.getDay(); return n===5?1 : n===6?2 : n===0?3 : 0; };
+  const WD_LABEL = ["월~목","금","토","일"];
+  function priceOf(b, slot, hours, extra, date){
+    const i = date ? wdIdx(date) : 0;
+    const base = (slot==="day"? b.priceDay : b.priceNight)[i] || (slot==="day"? b.priceDay[0] : b.priceNight[0]);
     const perH = Math.round(base/5);
-    return (hours===5? base : perH*hours) + extra*P.extraFee;
+    return (hours>=5? base : perH*hours) + extra*(b.addFee||P.extraFee);
   }
-  const hostPhone = b => `010-7${b.id.slice(1)}-1${b.id.slice(1)}`;
+  /* 공간 상세 — 홈페이지 노출 정보 (공간 관리 화면에서 수정, 수정분이 신규 수기 예약 금액에 반영) */
+  const ROOM_HUE={};
+  (function(){ const pal=["#C96F4A","#B9552F","#D8C29A","#8E8B86","#9AAB8F","#A97E4F","#8A6248","#D99A3D","#4A4642","#E4DCCB"];
+    branches.forEach((b,i)=>{ ROOM_HUE[b.shortName]=pal[i%pal.length]; }); })();
+  branches.forEach(b=>b.rooms.forEach(room=>{
+    room.priceDay=b.priceDay[0]; room.priceNight=b.priceNight[0];
+    room.priceDayWd=b.priceDay; room.priceNightWd=b.priceNight;
+    room.baseP=b.baseP; room.maxP=b.maxP;
+    const am=[b.karaoke.on?"노래방":null, b.bbq.on?"바베큐":null, b.pet.on?"애견동반":null].filter(Boolean);
+    room.desc=`${b.name} — 기준 ${b.baseP}인 · 최대 ${b.maxP}인${am.length?" · "+am.join(" · "):""}. 보증금 ${b.depositLabel} · 인원 추가 ${b.addFeeLabel}`;
+    room.hue=ROOM_HUE[b.shortName]||"#C9C4BF"; room.photo=""; room.active=true;
+  }));
+  function roomPrice(b, room, slot, hours, extra, date){
+    const i = date ? wdIdx(date) : 0;
+    const arr = slot==="day" ? (room.priceDayWd||b.priceDay) : (room.priceNightWd||b.priceNight);
+    const base = arr[i] || arr[0];
+    const perH = Math.round(base/5);
+    return (hours>=5? base : perH*hours) + extra*(b.addFee||P.extraFee);
+  }
+  const hostPhone = b => {
+    const m=(b.ownerRaw||"").match(/01[016-9][\s\-]?\d{3,4}[\s\-]?\d{4}/);
+    return m ? m[0].replace(/\s/g,"-") : "010-2254-9580";     // 본사 예약팀
+  };
 
   /* ── 이름·연락처 ── */
   const LAST=["김","이","박","최","정","강","조","윤","장","임","한","오","서","신","권","황","안","송","류","홍"];
@@ -672,7 +694,7 @@ SP.data = (() => {
     if (slot==="day"){ sh=weighted([[11,2],[12,5],[13,3]]); eh=Math.min(sh+weighted([[4,3],[5,6],[6,1]]),17); }
     else { sh=weighted([[17,2],[18,6],[19,3]]); eh=Math.min(sh+weighted([[4,2],[5,6],[6,2]]),24); }
     const extra = weighted([[0,5],[2,3],[4,2],[6,1],[8,.5]]);
-    const amount = priceOf(b, slot, eh-sh, extra);
+    const amount = priceOf(b, slot, eh-sh, extra, useDate);
     const lead = weighted([[1,1],[2,2],[3,3],[5,3],[7,3],[10,2],[14,2],[21,1],[30,.6],[45,.3]]);
     let created = addDays(useDate, -lead);
     if (created > NOW) created = new Date(NOW.getTime() - (1 + Math.floor(rnd()*70)) * 3600000);   // 신청은 언제나 과거
@@ -685,7 +707,7 @@ SP.data = (() => {
       branchId: b.id, roomId: room.id, roomName: room.name,
       name: mkName(), phone: mkPhone(),
       createdAt: created, useDate, sh, eh, slot,
-      base: P.basePeople, extra, amount,
+      base: b.baseP, extra, amount,
       channel, pay,
       channelNo: channel==="naver" ? "NV-"+(300000+Math.floor(rnd()*699999))
                : channel==="spacecloud" ? "SC-"+(100000+Math.floor(rnd()*899999)) : "",
@@ -1015,7 +1037,7 @@ SP.data = (() => {
         if (b.closeH-cur>=2) free.push([cur,b.closeH]);
         free.forEach(([s,e])=>{
           out.push({ branch:b, room, s, e,
-            price: priceOf(b, s<17?"day":"night", Math.min(e-s,5), Math.max(0,need-P.basePeople)) });
+            price: priceOf(b, s<17?"day":"night", Math.min(e-s,5), Math.max(0,need-b.baseP), date) });
         });
       });
     });
@@ -1157,7 +1179,7 @@ SP.data = (() => {
 
   const batchAt = new Date(TODAY.getTime()+3*3600000);       // 오늘 03:00 집계
 
-  return { NOW, TODAY, addDays, keyOf, dayMs,
+  return { NOW, TODAY, wdIdx, WD_LABEL, SITE, addDays, keyOf, dayMs,
     branches, branchById, reservations, links, conflictLog,
     membersDaily, statsDaily, heat, heatDen, occRate,
     revisit, settlement, pendingChanges, notifFails, chatbotOpen, extRegs,
@@ -1201,6 +1223,165 @@ SP.auth = (() => {
   return { login, logout, managers, byId, who,
            get user(){ return user; },
            get accounts(){ return D.accounts; } };
+})();
+
+
+/* ===== persist.js ===== */
+/* ============================================================
+   SSOPLE Dashboard — persist.js
+   변경분(수기·가져오기 예약, 상태 변경, 지점 편집, 수수료율, 노트)을
+   이 브라우저에 저장한다. 배포된 사이트에서는 새로고침해도 유지되고,
+   저장이 막힌 환경(미리보기)에서는 세션 동안만 유지된다.
+   여러 사람이 같은 데이터를 보는 건 D1 연동 단계에서 해결한다.
+   ============================================================ */
+SP.persist = (() => {
+  const D = SP.data;
+  const KEY = "ssople-dash-v1";
+  let mem = null, mode = "memory";
+  try { localStorage.setItem("__ss_t","1"); localStorage.removeItem("__ss_t"); mode = "local"; } catch(e){}
+
+  const addedIds = new Set();      // 수기 · 가져오기로 새로 만든 예약
+  const touched  = new Set();      // 상태가 바뀐 기존 예약
+  const branchEd = new Set();      // 편집된 지점 코드
+  const seedNotes = D.notices.length;
+
+  const dN = v => v instanceof Date ? +v : v;
+  const hD = v => (typeof v === "number" && v > 10000000) ? new Date(v) : v;
+  const DATE_F = ["useDate","createdAt","cancelAt","noshowAt","linkAt"];
+  const PATCH_F = ["status","checkin","noshowAt","cancelAt","cancelReason","refund",
+                   "pay","amountDue","memo","intIssue","ownIssue","chClosed","linkAt"];
+
+  function dehydRes(r){
+    const c = {...r};
+    DATE_F.forEach(k => { if (c[k]) c[k] = dN(c[k]); });
+    if (c.refund) c.refund = {...c.refund, at: dN(c.refund.at)};
+    c.memos = (r.memos||[]).map(m => ({...m, at: dN(m.at)}));
+    c.audit = (r.audit||[]).slice(-12).map(a => ({...a, at: dN(a.at)}));
+    return c;
+  }
+  function hydRes(o){
+    const r = {...o};
+    DATE_F.forEach(k => { if (r[k]) r[k] = hD(r[k]); });
+    if (r.refund) r.refund = {...r.refund, at: hD(r.refund.at)};
+    r.memos = (o.memos||[]).map(m => ({...m, at: hD(m.at)}));
+    r.audit = (o.audit||[]).map(a => ({...a, at: hD(a.at)}));
+    return r;
+  }
+
+  function snapshot(){
+    const added = [];
+    addedIds.forEach(id => { const r = D.reservations.find(x=>x.id===id); if (r) added.push(dehydRes(r)); });
+
+    const patch = {};
+    touched.forEach(id => {
+      if (addedIds.has(id)) return;
+      const r = D.reservations.find(x=>x.id===id); if (!r) return;
+      const p = {};
+      PATCH_F.forEach(k => {
+        if (k==="refund") p.refund = r.refund ? {...r.refund, at: dN(r.refund.at)} : null;
+        else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") p[k] = r[k] ? dN(r[k]) : null;
+        else p[k] = r[k];
+      });
+      p.memos = (r.memos||[]).map(m => ({...m, at: dN(m.at)}));
+      p.audit = (r.audit||[]).slice(-12).map(a => ({...a, at: dN(a.at)}));
+      patch[id] = p;
+    });
+
+    const branch = {};
+    branchEd.forEach(code => {
+      const b = D.branches.find(x=>x.code===code); if (!b) return;
+      const room = b.rooms[0];
+      branch[code] = { photo: room.photo||"", desc: room.desc, active: room.active!==false, hue: room.hue,
+        priceDay: b.priceDay.slice(), priceNight: b.priceNight.slice(),
+        pkgs: b.pkgs.map(p => ({k:p.k, p:p.p.slice(), url:p.url})) };
+    });
+
+    const notesExtra = D.notices.slice(0, Math.max(0, D.notices.length - seedNotes))
+      .map(n => ({...n, at: dN(n.at), reads: {...n.reads}}));
+    const reads = {};
+    D.notices.forEach(n => { if (Object.keys(n.reads).length) reads[n.id] = {...n.reads}; });
+
+    return { v:1, at: Date.now(), added, patch, branch,
+      settings: { feeRate: D.settings.feeRate },
+      hostAdj: D.hostAdj, notes: notesExtra, reads };
+  }
+
+  let timer = null;
+  function save(){
+    try {
+      const s = JSON.stringify(snapshot());
+      if (mode==="local") localStorage.setItem(KEY, s); else mem = s;
+    } catch(e) { /* 용량 초과 등 — 조용히 넘어간다 */ }
+  }
+  function ping(){ clearTimeout(timer); timer = setTimeout(save, 300); }
+
+  function load(){
+    let s = null;
+    try { s = mode==="local" ? localStorage.getItem(KEY) : mem; } catch(e){}
+    if (!s) return;
+    let o; try { o = JSON.parse(s); } catch(e) { return; }
+
+    Object.entries(o.branch||{}).forEach(([code,e]) => {
+      const b = D.branches.find(x=>x.code===code); if (!b) return;
+      const room = b.rooms[0];
+      room.photo = e.photo||""; if (e.desc) room.desc = e.desc;
+      room.active = e.active!==false; if (e.hue) room.hue = e.hue;
+      (e.priceDay||[]).forEach((v,i)=>{ if(v!=null) b.priceDay[i]=v; });
+      (e.priceNight||[]).forEach((v,i)=>{ if(v!=null) b.priceNight[i]=v; });
+      room.priceDay = b.priceDay[0]; room.priceNight = b.priceNight[0];
+      (e.pkgs||[]).forEach(pe => { const p = b.pkgs.find(x=>x.k===pe.k);
+        if (p){ (pe.p||[]).forEach((v,i)=>p.p[i]=v); p.url = pe.url; } });
+      branchEd.add(code);
+    });
+
+    (o.added||[]).forEach(a => {
+      if (D.reservations.some(x=>x.id===a.id)) return;
+      D.reservations.unshift(hydRes(a)); addedIds.add(a.id);
+    });
+
+    Object.entries(o.patch||{}).forEach(([id,p]) => {
+      const r = D.reservations.find(x=>x.id===id); if (!r) return;
+      PATCH_F.forEach(k => {
+        if (!(k in p)) return;
+        if (k==="refund") r.refund = p.refund ? {...p.refund, at: hD(p.refund.at)} : null;
+        else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") r[k] = p[k] ? hD(p[k]) : null;
+        else r[k] = p[k];
+      });
+      if (p.memos) r.memos = p.memos.map(m => ({...m, at: hD(m.at)}));
+      if (p.audit) r.audit = p.audit.map(a => ({...a, at: hD(a.at)}));
+      touched.add(id);
+    });
+
+    if (o.settings && typeof o.settings.feeRate === "number") D.settings.feeRate = o.settings.feeRate;
+    Object.entries(o.hostAdj||{}).forEach(([k,v]) => D.hostAdj[k]=v);
+    (o.notes||[]).slice().reverse().forEach(n => {
+      if (D.notices.some(x=>x.id===n.id)) return;
+      D.notices.unshift({...n, at: hD(n.at)});
+    });
+    Object.entries(o.reads||{}).forEach(([id,m]) => {
+      const n = D.notices.find(x=>x.id===id); if (n) Object.assign(n.reads, m);
+    });
+    D.occInvalidate();
+  }
+
+  /* 거의 모든 변경이 logAudit을 지나간다 — 여기서 저장을 건다 */
+  const _la = D.logAudit;
+  D.logAudit = function(){ _la.apply(null, arguments); ping(); };
+  const _an = D.addNote;
+  D.addNote = function(o){ const n = _an(o); ping(); return n; };
+
+  function reset(){
+    try { if (mode==="local") localStorage.removeItem(KEY); } catch(e){}
+    mem = null; addedIds.clear(); touched.clear(); branchEd.clear();
+  }
+
+  load();
+
+  return { mode, ping, save, reset,
+    addRes: id => { addedIds.add(id); ping(); },
+    touch:  r  => { touched.add(r.id); ping(); },
+    branch: code => { branchEd.add(code); ping(); },
+    _debug: () => ({ added:[...addedIds], touched:touched.size, branch:[...branchEd] }) };
 })();
 
 
@@ -1709,8 +1890,18 @@ SP.ui = (() => {
     return c;
   }
 
+  function downloadText(name, text, mime){
+    try{
+      const b=new Blob([text],{type:mime||"text/javascript;charset=utf-8"});
+      const u=URL.createObjectURL(b);
+      const a=el("a",{href:u,download:name});
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(u),800);
+    }catch(e){ toast("이 환경에서는 파일 내려받기가 제한됩니다","warn"); }
+  }
+
   return { el, frag, stBadge, chBadge, refundBadge, dueBadge, toast, modal, drawer,
-           card, secHead, comboChart, miniBars, heatCell, pager, downloadCSV, kpi };
+           card, secHead, comboChart, miniBars, heatCell, pager, downloadCSV, downloadText, kpi };
 })();
 
 
@@ -1835,7 +2026,10 @@ SP.screens = SP.screens || {};
             el("small",{class:"sub"},` ${pl.label||""} ${fv(pl.from)} → ${fv(pl.to)}${p.over?" · 2영업일 초과":""}`)),
           el("span",{class:"gap"},
             el("button",{class:"btn tiny",onclick:e=>{
-              if(pl.field) room[pl.field]=pl.to;
+              if(pl.field){ room[pl.field]=pl.to;
+                if(pl.field==="priceDay") b.priceDay[0]=pl.to;
+                if(pl.field==="priceNight") b.priceNight[0]=pl.to; }
+              if (SP.persist) SP.persist.branch(b.code);
               D.logAudit("공간", `${b.name} · ${room.name}`, `${p.kind} 승인 적용 — ${fv(pl.from)} → ${fv(pl.to)}`);
               const ix=D.pendingChanges.indexOf(p); if(ix>=0) D.pendingChanges.splice(ix,1);
               e.target.closest("li").remove(); U.toast("승인 · 적용 — 호스트에게 알림 발송");
@@ -1957,7 +2151,8 @@ SP.screens = SP.screens || {};
       el("div",{class:"f-row"}, basisSeg, quicks, dFrom, el("span",{class:"sub"},"~"), dTo, qIn,
         s.branch? el("button",{class:"chip on",onclick:()=>{s.branch=null;SP.app.render();}},
           D.branchById[s.branch].name+" ✕"):null,
-        perm("proxyBooking")? el("button",{class:"btn", onclick:()=>manualModal()},"+ 수기 예약"):null),
+        perm("proxyBooking")? el("button",{class:"btn", onclick:()=>manualModal()},"+ 수기 예약"):null,
+        perm("proxyBooking")? el("button",{class:"btn ghost", onclick:()=>ingestModal()},"네이버 내역 가져오기"):null),
       staff? null : el("div",{class:"f-row wrap"},
         el("span",{class:"f-cap"},"상태"), stChips,
         el("span",{class:"f-cap"},"결제"), payChips,
@@ -2023,6 +2218,7 @@ SP.screens = SP.screens || {};
     const whoNow = () => (SP.auth && SP.auth.user) ? SP.auth.user.name : R.ROLES[SP.state.role].label;
     function audit(act){
       r.audit.push({at:new Date(), who:whoNow(), act});
+      if (SP.persist) SP.persist.touch(r);
       D.logAudit("예약", r.id, act);
     }
 
@@ -2283,6 +2479,7 @@ SP.screens = SP.screens || {};
             act: paid? `수기 예약 등록 — ${payMode==="transfer"?"계좌이체 입금":"카드 결제"} 확인 후 확정`
                      : "수기 예약 등록 — 결제링크 발송 (유효 24시간)"}] };
         D.reservations.unshift(nr);
+        if (SP.persist) SP.persist.addRes(nr.id);
         D.occInvalidate();
         D.logAudit("예약", nr.id, nr.audit[0].act);
         if(paid){
@@ -2297,6 +2494,130 @@ SP.screens = SP.screens || {};
       }}]);
   }
   SP.screens.manualModal = manualModal;
+
+  /* ── 네이버 예약 내역 가져오기 — 공식 연동 전 임시 파이프라인 ── */
+  function ingestModal(){
+    const ta=el("textarea",{rows:"7",
+      placeholder:"네이버 파트너센터의 예약 목록을 드래그해 복사한 뒤 여기에 붙여넣으세요. 엑셀에서 복사해도 됩니다."});
+    const hasHead=el("input",{type:"checkbox", checked:true});
+    const prev=el("div",{});
+    const result=el("div",{});
+    let mapping=[], rows=[];
+    const FIELDS=[["ignore","(무시)"],["branch","지점"],["date","이용일"],["sh","시작"],["eh","종료"],
+      ["name","예약자"],["phone","연락처"],["people","인원"],["amount","금액"],["pkg","패키지"]];
+    const GUESS=[[/지점|매장|공간|스토어/,"branch"],[/이용일|날짜|일자|이용 ?날/,"date"],[/시작/,"sh"],[/종료/,"eh"],
+      [/예약자|이름|성함|고객/,"name"],[/연락처|전화|휴대/,"phone"],[/인원/,"people"],
+      [/금액|결제|가격/,"amount"],[/패키지|상품|타임/,"pkg"]];
+    const norm=s=>String(s??"").replace(/\s+/g,"");
+
+    function parseRows(){
+      const raw=ta.value.replace(/\r/g,"").split("\n").map(l=>l.replace(/^\s+|\s+$/g,"")).filter(Boolean);
+      if(!raw.length) return {head:null, rows:[]};
+      const delim = raw[0].includes("\t") ? "\t" : ",";
+      const cells = raw.map(l=>l.split(delim).map(c=>c.trim()));
+      const head = hasHead.checked ? cells.shift() : null;
+      return {head, rows:cells};
+    }
+    function preview(){
+      prev.innerHTML=""; result.innerHTML="";
+      const p=parseRows(); rows=p.rows;
+      if(!rows.length){ prev.appendChild(el("p",{class:"reject"},"붙여넣은 내용이 없습니다")); return; }
+      const cols=Math.max(...rows.map(r=>r.length));
+      mapping=Array.from({length:cols},(_,i)=>{
+        if(p.head&&p.head[i]) for(const [re,f] of GUESS) if(re.test(p.head[i])) return f;
+        return "ignore";
+      });
+      prev.append(
+        el("p",{class:"sub"},`${rows.length}행 — 열마다 어떤 값인지 확인해 주세요`),
+        el("div",{class:"f-row wrapseg"}, mapping.map((m,i)=>
+          el("select",{onchange:e=>mapping[i]=e.target.value},
+            FIELDS.map(([v,t])=>el("option",{value:v, selected:v===m},
+              (p.head&&p.head[i]? p.head[i].slice(0,10)+" → ":"열"+(i+1)+" → ")+t))))),
+        el("div",{style:"overflow-x:auto;margin-top:8px"},
+          el("table",{class:"grid tight"}, el("tbody",{},
+            rows.slice(0,5).map(r=>el("tr",{}, r.map(c=>el("td",{class:"clip"},c))))))));
+    }
+    function findBranch(t){
+      const n=norm(t); if(!n) return null;
+      return D.branches.find(b=>norm(b.name)===n||norm(b.shortName)===n||norm(b.code)===n)
+        || D.branches.find(b=>n.includes(norm(b.area))&&n.includes(norm(b.shortName)))
+        || D.branches.find(b=>n.includes(norm(b.name)))
+        || D.branches.find(b=>norm(b.shortName).length>=3 && n.includes(norm(b.shortName)));
+    }
+    const pDate=s=>{ let m=String(s).match(/(20\d{2})[.\-\/년\s]+(\d{1,2})[.\-\/월\s]+(\d{1,2})/);
+      if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+      m=String(s).match(/^(\d{1,2})[\/\.](\d{1,2})$/);
+      return m? new Date(D.TODAY.getFullYear(),+m[1]-1,+m[2]) : null; };
+    const pH=s=>{ const m=String(s).match(/(\d{1,2})\s*[:시]/); return m? +m[1] : null; };
+    const pkgHours=t=>{ t=String(t||"");
+      if(/올데이/.test(t)) return [12,22];
+      if(/투나잇/.test(t)) return [19,24];
+      if(/3\s*시간/.test(t)) return [14,17];
+      if(/밤/.test(t)) return [18,23];
+      if(/낮|오전/.test(t)) return [12,17];
+      return null; };
+
+    function commit(){
+      result.innerHTML="";
+      if(!rows.length) preview();
+      if(!rows.length) return;
+      const get=(row,f)=>{ const i=mapping.indexOf(f); return i>=0? (row[i]??""):""; };
+      const who=(SP.auth&&SP.auth.user)?SP.auth.user.name:"운영팀";
+      let okN=0, dup=0; const bad=[];
+      rows.forEach((row,ri)=>{
+        const b=findBranch(get(row,"branch"));
+        if(!b){ bad.push([ri+1,"지점을 찾지 못함: "+(get(row,"branch")||"(빈칸)")]); return; }
+        const date=pDate(get(row,"date"));
+        if(!date){ bad.push([ri+1,"날짜 해석 실패: "+get(row,"date")]); return; }
+        const ph=pkgHours(get(row,"pkg"));
+        let sh=pH(get(row,"sh")); if(sh==null) sh=ph? ph[0]:18;
+        let eh=pH(get(row,"eh")); if(eh==null) eh=ph? ph[1]:Math.min(sh+5,24);
+        if(eh<=sh) eh=Math.min(sh+5,24);
+        const name=get(row,"name")||"네이버 고객";
+        const dk=D.keyOf(date);
+        if(D.reservations.some(x=>x.branchId===b.id && D.keyOf(x.useDate)===dk &&
+            x.sh===sh && norm(x.name)===norm(name) && x.status!=="CANCELLED")){ dup++; return; }
+        const hit=D.conflictAny(b.rooms[0].id, date, sh, eh);
+        if(hit){ bad.push([ri+1,`시간 겹침 — 기존 ${hit.id}`]); return; }
+        const people=parseInt(String(get(row,"people")).replace(/\D/g,""),10)||b.baseP;
+        const extra=Math.max(0, people-b.baseP);
+        const amtRaw=parseInt(String(get(row,"amount")).replace(/\D/g,""),10);
+        const slot=sh<17?"day":"night";
+        const nr={ id:"R"+(300000+Math.floor(Math.random()*99999)),
+          branchId:b.id, roomId:b.rooms[0].id, roomName:b.rooms[0].name,
+          name, phone:get(row,"phone")||"", createdAt:new Date(),
+          useDate:date, sh, eh, slot, base:b.baseP, extra,
+          amount: amtRaw>0? amtRaw : D.roomPrice(b, b.rooms[0], slot, Math.min(eh-sh,5), extra, date),
+          channel:"naver", pay:"channel", channelNo:"", status:"CONFIRMED",
+          deposit:"-", memo:"", intIssue:"", ownIssue:"", options:"",
+          checkin:false, refund:null, amountDue:0, memos:[],
+          audit:[{at:new Date(), who, act:"네이버 예약 내역 가져오기"}] };
+        D.reservations.unshift(nr);
+        if(SP.persist) SP.persist.addRes(nr.id);
+        okN++;
+      });
+      D.occInvalidate();
+      D.logAudit("예약","네이버 가져오기",`등록 ${okN}건 · 중복 ${dup}건 · 실패 ${bad.length}건`);
+      result.append(el("div",{class: okN? "accept":"reject"},
+        el("b",{},`가져오기 완료 — 등록 ${okN}건 · 중복 건너뜀 ${dup}건 · 실패 ${bad.length}건`),
+        bad.length? el("ul",{class:"plain"}, bad.slice(0,5).map(([n,m])=>el("li",{},`${n}행: ${m}`))) : null));
+      if(okN) U.toast(`네이버 예약 ${okN}건 반영 — 원장 · 현황판 · 정산에 바로 잡힙니다`);
+    }
+
+    U.modal("네이버 예약 내역 가져오기",
+      el("div",{},
+        el("p",{class:"note"},"공식 연동 전 임시 절차입니다. 표를 복사해 붙여넣으면 원장에 반영되고, 같은 건을 다시 붙여넣어도 중복 등록되지 않습니다."),
+        ta,
+        el("div",{class:"f-row", style:"margin:8px 0"},
+          el("label",{class:"sub"}, hasHead, " 첫 줄은 제목"),
+          el("button",{class:"btn ghost tiny", onclick:preview},"미리보기"),
+          el("span",{class:"grow"}),
+          el("button",{class:"btn tiny", onclick:commit},"가져오기")),
+        prev, result),
+      [{label:"닫고 목록 보기", kind:"btn", onClick:(close)=>{ close(); SP.app.go("res"); }}]);
+  }
+  SP.screens.ingestModal = ingestModal;
+
 
   /* ── 빈 시간 찾기 탭 (6.4) ── */
   const vacState = { date:null, region:"", people:4 };
@@ -2635,12 +2956,12 @@ SP.screens = SP.screens || {};
           el("button",{class:"btn tiny",onclick:()=>{
             r.status="NO_SHOW"; r.noshowAt=new Date();
             r.audit.push({at:new Date(),who:who(),act:"노쇼 확정 — 24시간 내 정정 가능"});
-            D.logAudit("예약", r.id, "노쇼 확정");
+            D.logAudit("예약", r.id, "노쇼 확정"); if(SP.persist) SP.persist.touch(r);
             U.toast("노쇼 확정 — 매출은 유지되고 정산에 포함됩니다"); SP.app.render();
           }},"노쇼 확정"),
           el("button",{class:"btn tiny ghost",onclick:()=>{
             r.checkin=true; r.audit.push({at:new Date(),who:who(),act:"체크인 확인 (늦은 도착)"});
-            D.logAudit("예약", r.id, "체크인 확인 (늦은 도착)");
+            D.logAudit("예약", r.id, "체크인 확인 (늦은 도착)"); if(SP.persist) SP.persist.touch(r);
             U.toast("체크인 확인"); SP.app.render();
           }},"도착함"))));
     });
@@ -2652,7 +2973,7 @@ SP.screens = SP.screens || {};
         el("button",{class:"btn tiny ghost",onclick:()=>{
           r.status="COMPLETED"; r.checkin=true;
           r.audit.push({at:new Date(),who:who(),act:"노쇼 정정 → 이용 완료"});
-          D.logAudit("예약", r.id, "노쇼 정정 → 이용 완료");
+          D.logAudit("예약", r.id, "노쇼 정정 → 이용 완료"); if(SP.persist) SP.persist.touch(r);
           U.toast("이용 완료로 정정했습니다"); SP.app.render();
         }},"이용 완료로 정정")));
     });
@@ -2757,12 +3078,12 @@ SP.screens = SP.screens || {};
             return;
           }
           const room=b.rooms[0];
-          const need=Math.max(0,(+ppl.value||4)-R.POLICY.basePeople);
+          const need=Math.max(0,(+ppl.value||4)-b.baseP);
           const r={ id:"R"+(300000+Math.floor(Math.random()*99999)),
             branchId:bid, roomId:room.id, roomName:room.name,
             name:"채널 고객", phone:"010-0000-0000",
             createdAt:new Date(), useDate:dt, sh:s, eh:e, slot:s<17?"day":"night",
-            base:R.POLICY.basePeople, extra:need,
+            base:b.baseP, extra:need,
             amount:D.priceOf(b, s<17?"day":"night", Math.min(e-s,5), need),
             channel:ch.value, pay:"channel", channelNo:cno.value.trim(),
             status:"CONFIRMED", deposit:"-", memo:"", intIssue:"", ownIssue:"",
@@ -2770,6 +3091,7 @@ SP.screens = SP.screens || {};
             audit:[{at:new Date(),who:who(),act:"외부 채널 예약 수기 등록"}]};
           D.reservations.unshift(r); D.occInvalidate();
           D.logAudit("예약", r.id, `외부 채널 등록 — ${ch.value==="naver"?"네이버예약":"스페이스클라우드"}`);
+          if(SP.persist) SP.persist.addRes(r.id);
           msg.appendChild(el("p",{class:"accept"},`등록 완료 — ${r.id}. 이 시간대의 자사 판매는 자동으로 막힙니다.`));
           U.toast("채널 예약 등록 완료");
           drawList();
@@ -2793,7 +3115,7 @@ SP.screens = SP.screens || {};
           r.status="CANCELLED"; r.cancelAt=new Date();
           r.cancelReason={tag:"일정 변경", note:"채널 측 취소 반영"};
           r.audit.push({at:new Date(),who:who(),act:"채널 예약 취소 (채널 측 취소 반영)"});
-          D.occInvalidate(); D.logAudit("예약", r.id, "채널 예약 취소");
+          D.occInvalidate(); D.logAudit("예약", r.id, "채널 예약 취소"); if(SP.persist) SP.persist.touch(r);
           U.toast("취소 처리 — 시간대 재개방"); drawList();
         }},"취소"))));
     }
@@ -3077,112 +3399,207 @@ SP.screens = SP.screens || {};
     draw();
   };
 
-  /* ═══════════════ 공간 정보 관리 ═══════════════ */
+  /* ═══════════════ 공간 정보 관리 · 프론트 연동 ═══════════════ */
   const spState = { q:"", region:"", bid:null };
+
+  function siteMeta(){
+    const st=D.SITE||{};
+    return { tel:st.tel||"1544-3523", kakao:st.kakao||"http://pf.kakao.com/_mufLd",
+      hours:st.hours||"월~목 10~19시 · 금~일 10~22시",
+      regions:[...new Set(D.branches.map(b=>b.region))],
+      count:D.branches.length,
+      src:(st.src||"운영관리 총괄표")+" · 대시보드 내보내기 "+R.fmtDate(new Date()) };
+  }
+  function buildFrontData(){
+    const rows=D.branches.filter(b=>b.rooms[0].active!==false).map(b=>{
+      const room=b.rooms[0];
+      return { code:b.code, region:b.region, area:b.area, name:b.shortName, disp:b.name,
+        addr:b.addr, base:b.baseP, max:b.maxP, deposit:b.depositLabel, add:b.addFeeLabel,
+        pet:b.pet, bbq:b.bbq, karaoke:b.karaoke, place:b.place, sc:b.sc,
+        photo:room.photo||"",
+        pkgs:b.pkgs.map(p=>({k:p.k, label:p.label, hrs:p.hrs, p:p.p,
+          base:p.base, max:p.max, add:b.addFeeLabel, url:p.url})) };
+    });
+    const obj={ meta:siteMeta(), branches:rows };
+    return { name:"data.public.js",
+      text:"/* 고객용 지점 데이터 — 쏘플 대시보드에서 생성 ("+R.fmtDT(new Date())+")\n"+
+           "   대외비 없음 · ssople 저장소 최상단에 이 파일명 그대로 업로드하면 자동 배포됩니다. */\n"+
+           "window.SSOPLE="+JSON.stringify(obj)+";\n" };
+  }
+  function buildFullData(){
+    const rows=D.branches.map(b=>{
+      const room=b.rooms[0];
+      return { code:b.code, region:b.region, area:b.area, name:b.shortName, disp:b.name,
+        addr:b.addr, type:b.type, base:b.baseP, max:b.maxP,
+        deposit:b.depositLabel, add:b.addFeeLabel,
+        pet:b.pet, bbq:b.bbq, karaoke:b.karaoke, place:b.place, sc:b.sc,
+        photo:room.photo||"", visible:room.active!==false,
+        priceDay:b.priceDay, priceNight:b.priceNight, pkgs:b.pkgs, ops:b.ops };
+    });
+    const obj={ meta:siteMeta(), branches:rows };
+    return { name:"ssople-data.js",
+      text:"/* 전체 지점 데이터 — 대외비 포함(도어락·와이파이·점주 연락처)\n"+
+           "   쏘플 대시보드에서 생성 ("+R.fmtDT(new Date())+") · 호스트 센터 전용, 외부 공유 금지 */\n"+
+           "window.SSOPLE="+JSON.stringify(obj)+";\n" };
+  }
+  SP.screens.buildFrontData = buildFrontData;
+  SP.screens.buildFullData  = buildFullData;
+
   SP.screens.spacesAdmin = function(root){
     if(!perm("forceChange")){ root.appendChild(el("div",{class:"empty"},"공간 정보 관리는 본사 권한입니다")); return; }
     root.appendChild(el("div",{class:"page-head"},
       el("h1",{},"공간 정보 관리"),
-      el("p",{class:"sub"},"홈페이지에 노출되는 사진 · 가격 · 소개를 바꿉니다 — 저장 즉시 반영되고, 전 항목이 변경 이력에 남습니다")));
+      el("p",{class:"sub"},"여기서 저장한 값이 그대로 고객 홈페이지 파일이 됩니다 — 전 항목 변경 이력 기록")));
+
+    /* 프론트 연동 */
+    const visCnt=D.branches.filter(b=>b.rooms[0].active!==false).length;
+    root.appendChild(U.card("", U.secHead("프론트 연동",
+        "수정 · 저장 → 고객용 파일 내려받기 → GitHub의 ssople 저장소에 업로드 → 1분 내 자동 배포"),
+      el("div",{class:"f-row"},
+        el("button",{class:"btn", onclick:()=>{
+          const f=buildFrontData(); U.downloadText(f.name, f.text);
+          D.logAudit("공간","프론트 연동","고객용 데이터 파일 내보내기 (data.public.js)");
+          U.toast("고객용 파일 생성 — 대외비는 제외됩니다");
+        }},"고객용 파일 내려받기"),
+        el("button",{class:"btn ghost", onclick:()=>{
+          const f=buildFullData(); U.downloadText(f.name, f.text);
+          D.logAudit("공간","프론트 연동","전체 데이터 파일 내보내기 (대외비 포함)");
+          U.toast("전체 파일 생성 — 호스트 센터 전용, 외부 공유 금지","warn");
+        }},"호스트용 전체 파일"),
+        el("span",{class:"sub"},`고객용에는 노출 중인 ${visCnt} / ${D.branches.length}개 지점이 담깁니다`))));
 
     const regions=[...new Set(D.branches.map(b=>b.region))];
-    const list = () => D.branches.filter(b=>(!spState.region||b.region===spState.region) &&
-      (!spState.q||b.name.includes(spState.q)));
-    if(!spState.bid || !list().some(b=>b.id===spState.bid)) spState.bid = (list()[0]||D.branches[0]).id;
+    const list=()=>D.branches.filter(b=>(!spState.region||b.region===spState.region) &&
+      (!spState.q || b.name.includes(spState.q) || b.code.includes(spState.q.toUpperCase())));
+    if(!spState.bid || !list().some(b=>b.id===spState.bid)) spState.bid=(list()[0]||D.branches[0]).id;
 
-    const bSel = el("select",{onchange:e=>{spState.bid=e.target.value; SP.app.render();}});
+    const bSel=el("select",{onchange:e=>{spState.bid=e.target.value; SP.app.render();}});
     function fillSel(){ bSel.innerHTML="";
-      list().forEach(b=>bSel.appendChild(el("option",{value:b.id, selected:b.id===spState.bid},`${b.region} · ${b.name}`))); }
+      list().forEach(b=>bSel.appendChild(el("option",{value:b.id, selected:b.id===spState.bid},
+        `${b.code} · ${b.name}${b.rooms[0].active===false?" (숨김)":""}`))); }
     fillSel();
     root.appendChild(U.card("filter", el("div",{class:"f-row"},
       el("select",{onchange:e=>{spState.region=e.target.value; spState.bid=null; SP.app.render();}},
-        el("option",{value:""},"전 지역"), regions.map(x=>el("option",{value:x, selected:spState.region===x},x))),
-      el("input",{type:"search", placeholder:"지점 검색", value:spState.q,
+        el("option",{value:""},"전 지역"),
+        regions.map(x=>el("option",{value:x, selected:spState.region===x},x))),
+      el("input",{type:"search", placeholder:"지점 · 코드 검색", value:spState.q,
         oninput:e=>{spState.q=e.target.value; fillSel();}}),
       bSel)));
 
-    const b = D.branchById[spState.bid];
+    const b=D.branchById[spState.bid];
+    const room=b.rooms[0];
+    const target=b.name;
+    const WDL=D.WD_LABEL;
 
     /* 호스트 변경 요청 승인 배너 */
-    const pend = D.pendingChanges.filter(p=>p.branchId===b.id);
+    const pend=D.pendingChanges.filter(p=>p.branchId===b.id);
     if(pend.length){
       const box=el("div",{});
+      const fv=v=>typeof v==="number"? R.fmtNum(v) : v===true?"노출":v===false?"숨김":String(v??"").slice(0,26);
       pend.forEach(p=>{
-        const room=b.rooms.find(r=>r.id===p.roomId)||b.rooms[0];
         const pl=p.payload||{};
-        const fv = v => typeof v==="number"? R.fmtNum(v) : v===true?"노출":v===false?"숨김":String(v??"").slice(0,26);
         box.appendChild(el("div",{class:"row-line"+(p.over?" hotline":"")},
-          el("span",{}, el("b",{},p.kind), ` — ${room.name} · ${pl.label||""} `,
+          el("span",{}, el("b",{},p.kind), ` — ${pl.label||""} `,
             el("small",{class:"sub"},`${fv(pl.from)} → ${fv(pl.to)}${p.over?" · 2영업일 초과":""}`)),
           el("span",{class:"gap"},
             el("button",{class:"btn tiny", onclick:()=>{
-              if(pl.field) room[pl.field]=pl.to;
-              D.logAudit("공간", `${b.name} · ${room.name}`, `${p.kind} 승인 적용 — ${fv(pl.from)} → ${fv(pl.to)}`);
+              if(pl.field){ room[pl.field]=pl.to;
+                if(pl.field==="priceDay") b.priceDay[0]=pl.to;
+                if(pl.field==="priceNight") b.priceNight[0]=pl.to; }
+              if(SP.persist) SP.persist.branch(b.code);
+              D.logAudit("공간", target, `${p.kind} 승인 적용 — ${fv(pl.from)} → ${fv(pl.to)}`);
               D.pendingChanges.splice(D.pendingChanges.indexOf(p),1);
-              U.toast("승인 · 적용 — 호스트에게 알림 발송"); SP.app.render();
+              U.toast("승인 · 적용 — 다음 내보내기부터 프론트에 반영"); SP.app.render();
             }},"승인"),
             el("button",{class:"btn tiny ghost", onclick:()=>{
-              D.logAudit("공간", `${b.name} · ${room.name}`, `${p.kind} 반려`);
+              D.logAudit("공간", target, `${p.kind} 반려`);
               D.pendingChanges.splice(D.pendingChanges.indexOf(p),1);
-              U.toast("반려 — 사유 입력 알림 발송"); SP.app.render();
+              U.toast("반려 처리"); SP.app.render();
             }},"반려"))));
       });
       root.appendChild(U.card("", U.secHead("호스트 변경 요청", `${pend.length}건 승인 대기`), box));
     }
 
-    /* 룸 편집 카드 */
-    b.rooms.forEach(room=>{
-      const target=`${b.name} · ${room.name}`;
-      let hue=room.hue;
-      const ph=el("div",{class:"roomph", style:"background:"+hue});
-      const palette=el("div",{class:"palette"},
-        [...new Set(Object.values(D.ROOM_HUE))].map(c=>el("button",
-          {class:"sw"+(c===hue?" on":""), style:"background:"+c, "aria-label":"색상 "+c,
-           onclick:e=>{ hue=c; ph.style.background=c;
-             [...e.target.parentNode.children].forEach(x=>x.classList.remove("on")); e.target.classList.add("on"); }})));
-      const inD=el("input",{type:"number", step:"1000", value:room.priceDay});
-      const inN=el("input",{type:"number", step:"1000", value:room.priceNight});
-      const inB=el("input",{type:"number", min:"1", value:room.baseP});
-      const inM=el("input",{type:"number", min:"1", value:room.maxP});
-      const inDesc=el("textarea",{rows:"2"}, room.desc);
-      let active=room.active!==false;
-      const actSeg=el("div",{class:"seg"},
-        [[true,"노출"],[false,"숨김"]].map(([v,t])=>el("button",
-          {class:"seg-b"+(active===v?" on":""), onclick:e=>{ active=v;
-            [...e.target.parentNode.children].forEach(x=>x.classList.remove("on")); e.target.classList.add("on"); }},t)));
+    /* 편집 카드 */
+    const phIn=el("input",{placeholder:"https:// 사진 주소 — 비우면 색상 카드로 표시", value:room.photo||"", "data-f":"photo"});
+    const thumb=el("div",{class:"roomph", style:"background:"+(room.hue||"#C9C4CF")});
+    function paintThumb(){
+      thumb.innerHTML="";
+      const u=phIn.value.trim();
+      if(u){ const im=el("img",{src:u, alt:"", class:"thumb",
+        onerror:()=>{ im.remove(); U.toast("사진 주소를 불러오지 못했습니다","warn"); }});
+        thumb.appendChild(im); }
+    }
+    phIn.onchange=paintThumb; paintThumb();
+    const descIn=el("textarea",{rows:"2", "data-f":"desc"}, room.desc||"");
+    let active=room.active!==false;
+    const actSeg=el("div",{class:"seg"},
+      [[true,"노출"],[false,"숨김"]].map(([v,t])=>el("button",
+        {class:"seg-b"+(active===v?" on":""), onclick:e=>{ active=v;
+          [...e.target.parentNode.children].forEach(x=>x.classList.remove("on")); e.target.classList.add("on"); }},t)));
 
-      root.appendChild(U.card("space-card",
-        U.secHead(target, `기준 ${room.baseP}인 · 최대 ${room.maxP}인`,
-          el("button",{class:"btn", onclick:()=>{
-            const diffs=[];
-            const put=(label, oldV, newV, apply, fmt)=>{ if(String(oldV)!==String(newV)){ apply();
-              diffs.push(`${label} ${fmt?fmt(oldV):oldV} → ${fmt?fmt(newV):newV}`); } };
-            put("낮 요금", room.priceDay, +inD.value||room.priceDay, ()=>room.priceDay=+inD.value, R.fmtNum);
-            put("밤 요금", room.priceNight, +inN.value||room.priceNight, ()=>room.priceNight=+inN.value, R.fmtNum);
-            put("기준 인원", room.baseP, +inB.value||room.baseP, ()=>room.baseP=+inB.value);
-            put("최대 인원", room.maxP, +inM.value||room.maxP, ()=>room.maxP=+inM.value);
-            put("소개글", room.desc, inDesc.value.trim()||room.desc, ()=>room.desc=inDesc.value.trim(),
-              v=>String(v).slice(0,14)+"…");
-            put("대표 사진", room.hue, hue, ()=>room.hue=hue);
-            put("노출 상태", room.active!==false, active, ()=>room.active=active, v=>v?"노출":"숨김");
-            if(!diffs.length){ U.toast("변경된 항목이 없습니다"); return; }
-            diffs.forEach(d=>D.logAudit("공간", target, d));
-            U.toast(`저장 완료 (${diffs.length}건) — 담당 ${me().name}`);
-            SP.app.render();
-          }},"저장")),
-        el("div",{class:"space-grid"},
-          el("div",{class:"space-photo"},
-            ph, palette,
-            el("p",{class:"sub"},"대표 사진 — 데모에서는 색상 시드로 대신합니다. 실서비스는 이미지 업로드 · 순서 변경")),
-          el("div",{class:"form-grid"},
-            el("label",{},"낮타임 요금 (12~17시)", inD),
-            el("label",{},"밤타임 요금 (18~23시)", inN),
-            el("label",{},"기준 인원", inB),
-            el("label",{},"최대 인원", inM),
-            el("label",{class:"span2"},"소개글 (홈페이지 노출)", inDesc),
-            el("label",{},"운영 노출", actSeg))),
-        el("p",{class:"note"},"요금 변경은 이후의 신규 · 수기 예약부터 적용됩니다 — 이미 결제된 예약의 금액은 바뀌지 않습니다")));
-    });
+    /* 패키지 표 — 요일 4단 요금 + 예약 링크 */
+    const pkTbl=el("table",{class:"grid tight pk-edit"},
+      el("thead",{}, el("tr",{}, ["패키지","시간", ...WDL, "네이버 예약 링크"].map(h=>el("th",{},h)))),
+      el("tbody",{}, b.pkgs.map(p=>el("tr",{},
+        el("td",{}, el("i",{class:"rdot", style:"background:"+(room.hue||"#C9C4CF")}), el("b",{},p.label)),
+        el("td",{class:"sub"}, p.hrs||"—"),
+        p.p.map((v,i)=>el("td",{}, el("input",{type:"number", step:"5000", class:"pk-in num",
+          value:v==null?"":v, placeholder:"—", "data-k":p.k, "data-i":String(i)}))),
+        el("td",{}, el("input",{class:"url-in", placeholder:"없으면 비워두세요 — 프론트에서 카톡 문의로 안내",
+          value:p.url||"", "data-k":p.k, "data-i":"url"}))))));
+
+    root.appendChild(U.card("space-card",
+      U.secHead(`${target} · ${b.code}`, `${b.type} · 기준 ${b.baseP}인 · 최대 ${b.maxP}인 · 보증금 ${b.depositLabel}`,
+        el("span",{class:"gap"},
+          el("a",{class:"btn tiny ghost", href:"https://ssople.pages.dev/#"+b.code, target:"_blank", rel:"noopener"},"프론트 미리보기 ↗"),
+          el("button",{class:"btn tiny", onclick:save},"저장"))),
+      el("div",{class:"space-grid"},
+        el("div",{class:"space-photo"},
+          thumb,
+          el("label",{class:"f-cap"},"대표 사진 URL"), phIn,
+          el("p",{class:"sub"},"사진을 올리면 고객 카드가 바로 사진으로 바뀝니다 — 파일로 주시면 일괄 등록해 드립니다")),
+        el("div",{},
+          el("label",{class:"f-cap"},"소개글 (고객 홈페이지 노출)"), descIn,
+          el("div",{class:"f-row", style:"margin-top:10px"},
+            el("span",{class:"f-cap"},"프론트 노출"), actSeg,
+            el("span",{class:"sub"},"숨기면 고객용 파일에서 빠집니다")))),
+      el("div",{style:"overflow-x:auto;margin-top:12px"}, pkTbl),
+      el("p",{class:"note"},"요금 · 링크는 저장 즉시 수기 예약 계산과 내보내기에 반영됩니다. 기준 · 최대 인원과 보증금은 시트가 원천이라 여기서 바꾸지 않습니다.")));
+
+    function save(){
+      const diffs=[];
+      const nPhoto=phIn.value.trim();
+      if(nPhoto!==(room.photo||"")){ room.photo=nPhoto; diffs.push("대표 사진 "+(nPhoto?"등록":"제거")); }
+      const nDesc=descIn.value.trim();
+      if(nDesc && nDesc!==room.desc){ room.desc=nDesc; diffs.push("소개글 수정"); }
+      const wasOn=room.active!==false;
+      if(active!==wasOn){ room.active=active; diffs.push("프론트 노출 "+(active?"켬":"끔")); }
+      let priceN=0;
+      pkTbl.querySelectorAll("input[data-k]").forEach(inp=>{
+        const k=inp.getAttribute("data-k"), i=inp.getAttribute("data-i");
+        const p=b.pkgs.find(x=>x.k===k); if(!p) return;
+        if(i==="url"){
+          const nu=inp.value.trim();
+          if(nu!==(p.url||"")){ p.url=nu; diffs.push(`${p.label} 예약 링크 ${nu?"변경":"제거"}`); }
+          return;
+        }
+        const idx=+i;
+        const nv=inp.value===""? null : (+inp.value||null);
+        if(nv!==p.p[idx]){
+          diffs.push(`${p.label} ${WDL[idx]} ${p.p[idx]==null?"—":R.fmtNum(p.p[idx])} → ${nv==null?"—":R.fmtNum(nv)}`);
+          p.p[idx]=nv; priceN++;
+          if(k==="day"&&nv!=null){ b.priceDay[idx]=nv; if(idx===0) room.priceDay=nv; }
+          if(k==="night"&&nv!=null){ b.priceNight[idx]=nv; if(idx===0) room.priceNight=nv; }
+        }
+      });
+      if(!diffs.length){ U.toast("변경된 항목이 없습니다"); return; }
+      const logs = diffs.length>6 ? diffs.slice(0,4).concat([`외 ${diffs.length-4}건`]) : diffs;
+      logs.forEach(d=>D.logAudit("공간", target, d));
+      if(SP.persist) SP.persist.branch(b.code);
+      U.toast(`저장 완료 (${diffs.length}건) — 담당 ${me().name} · 내보내기에 반영됩니다`);
+      SP.app.render();
+    }
   };
 
   /* ═══════════════ 취소 · 환불 내역 ═══════════════ */
@@ -3468,7 +3885,8 @@ SP.screens = SP.screens || {};
         el("div",{class:"note-foot"},
           el("span",{class:"sub"},`확인 ${readers.length}명${readers.length? " — "+readers.join(", "):""}`),
           unreadMine? el("button",{class:"btn tiny", onclick:()=>{
-            n.reads[uid]=new Date(); U.toast("확인 처리 — 이름이 기록됩니다"); SP.app.render();
+            n.reads[uid]=new Date(); if(SP.persist) SP.persist.ping();
+            U.toast("확인 처리 — 이름이 기록됩니다"); SP.app.render();
           }},"확인했습니다") : null)));
     });
   };
@@ -3818,7 +4236,11 @@ SP.app = (() => {
             el("td",{class:"num"},a.id),
             el("td",{}, el("b",{},a.name)),
             el("td",{class:"sub"},a.pos))))),
-        el("p",{class:"sub"},"데모 계정 — 행을 누르면 자동 입력됩니다 · 비밀번호는 모두 1234 · 새로고침하면 다시 로그인합니다 (브라우저 저장 없음)"))));
+        el("p",{class:"sub"},"데모 계정 — 행을 누르면 자동 입력됩니다 · 비밀번호는 모두 1234"),
+        el("button",{class:"reset-link", onclick:e=>{
+          if(SP.persist) SP.persist.reset();
+          e.target.textContent="비웠습니다 — 새로고침하면 초기 데이터로 시작합니다";
+        }},"이 브라우저의 저장 데이터 초기화"))));
     try{ idIn.focus(); }catch(e){}
   }
 
@@ -3861,6 +4283,8 @@ SP.app = (() => {
       railEl.append(el("button",{class:"rail-item sigbtn"+(nn?" hot":""),
         onclick:()=>go("notes")}, nn? `노트 ${nn}건`:"노트 0건"));
     }
+    railEl.append(el("span",{class:"rail-item"},
+      "저장 "+((SP.persist&&SP.persist.mode==="local")?"이 브라우저":"세션(미리보기)")));
   }
 
   function topbar(){
