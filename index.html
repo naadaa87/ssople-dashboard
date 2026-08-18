@@ -426,6 +426,59 @@ td.strong{font-weight:800}
 .accept{background:#EAF6EE;border:1px solid #BFE3CB;border-radius:12px;padding:10px 13px;font-size:12.5px}
 .accept ul,.reject ul{margin:6px 0 0;padding-left:16px}
 
+.rail-item.sync{color:#157A45;font-weight:800}
+
+/* ══════════ Core — 상태 10종 · 타임라인 · 원장 · 대사 ══════════ */
+.st-pend{background:#E9F0FB;color:#2B5FB8}
+.st-pre{background:#FCF3DE;color:#8A6A18}
+.st-in{background:#DFF3E6;color:#0E6B3C;font-weight:800}
+.st-exp{background:#EFEBE6;color:#8A8078}
+.st-closed{background:#2A2522;color:#fff}
+.tl{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.tl li{display:flex;gap:8px;align-items:baseline}
+.tl .tl-t{color:var(--sub);min-width:74px}
+.tl .tl-k{font-weight:800;color:var(--red-deep)}
+.lg-line{display:grid;grid-template-columns:74px 1fr auto;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px dashed var(--paper2)}
+.lg-line:first-child{border-top:0}
+.lg-sum{display:flex;justify-content:space-between;font-weight:800;border-top:2px solid var(--ink);margin-top:6px;padding-top:6px}
+.q-open{background:var(--red-soft);border-left:3px solid var(--red)}
+.evt-chip{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--paper2);color:var(--sub)}
+
+.tabs{display:flex;gap:2px;margin-top:10px;border-bottom:1px solid var(--paper2)}
+.tab{padding:8px 14px;font-weight:700;color:var(--sub);border-bottom:2px solid transparent;font-size:13px}
+.tab.on{color:var(--red-deep);border-bottom-color:var(--red)}
+.empty.ok{background:#EAF6EE;color:#0E6B3C;border-radius:12px;padding:14px;text-align:center;font-weight:700}
+
+.rail-in{flex-wrap:wrap;row-gap:4px}
+.stars{color:#E39A1F;letter-spacing:1px}
+.rv-low{border-left:3px solid var(--red);padding-left:9px}
+.sla-over{color:var(--red-deep);font-weight:800}
+.grade-b{background:var(--paper2);color:var(--sub)}
+.grade-p{background:#E9F0FB;color:#2B5FB8}
+.grade-v{background:#2A2522;color:#F5D98A}
+.pol-sec{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--paper2)}
+.pol-sec:first-of-type{border-top:0}
+.pol-sec input{max-width:130px}
+
+.stepline{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 12px}
+.stepchip{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--paper2);color:var(--sub)}
+.btn.danger.tiny{background:var(--red-deep);color:#fff}
+
+/* ── 홈 재편 · 창업 ── */
+.ns-band{display:flex;align-items:center;gap:16px;background:linear-gradient(90deg,#2A2522,#3A322C);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:10px;flex-wrap:wrap}
+.ns-cap{font-size:11.5px;font-weight:800;color:#E8C989;display:block}
+.ns-val{font-size:30px;line-height:1.1;margin-right:8px}
+.ns-sub{color:#CFC6BC;font-size:12px}
+.ns-note{margin-left:auto;font-size:11.5px;color:#BFB4A8;max-width:300px}
+.anom-band{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.anom-chip{font-size:12px;font-weight:700;background:#FCF3DE;color:#8A6A18;border-radius:999px;padding:5px 12px}
+.anom-chip.hot{background:var(--red-soft);color:var(--red-deep)}
+.daily-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.daily-cell{background:#fff;border:1px solid var(--paper2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.daily-cell .d-k{font-size:11px;font-weight:800;color:var(--red-deep)}
+.daily-cell .d-v{font-size:13.5px}
+.worst-band{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 12px}
+
 </style>
 </head>
 <body>
@@ -441,12 +494,48 @@ window.SP = window.SP || {};
 
 SP.rules = (() => {
   /* ── 상태 5종 (기획서 4.1) ── */
+  /* 기획서 5.1 — 예약 상태 10종. 화면·알림·정산이 같은 이름을 쓴다 */
   const STATUS = {
-    HOLD:      { key:"HOLD",      label:"홀드",     cls:"st-hold" },
-    CONFIRMED: { key:"CONFIRMED", label:"확정",     cls:"st-conf" },
-    COMPLETED: { key:"COMPLETED", label:"이용 완료", cls:"st-done" },
-    CANCELLED: { key:"CANCELLED", label:"취소",     cls:"st-cxl"  },
-    NO_SHOW:   { key:"NO_SHOW",   label:"노쇼",     cls:"st-nos"  }
+    HOLD:            { key:"HOLD",            label:"홀드",       cls:"st-hold" },
+    PENDING_PAYMENT: { key:"PENDING_PAYMENT", label:"결제 진행",  cls:"st-pend" },
+    CONFIRMED:       { key:"CONFIRMED",       label:"확정",       cls:"st-conf" },
+    PRE_USE:         { key:"PRE_USE",         label:"입실 임박",  cls:"st-pre"  },
+    IN_USE:          { key:"IN_USE",          label:"이용 중",    cls:"st-in"   },
+    COMPLETED:       { key:"COMPLETED",       label:"이용 완료",  cls:"st-done" },
+    CANCELLED:       { key:"CANCELLED",       label:"취소",       cls:"st-cxl"  },
+    NO_SHOW:         { key:"NO_SHOW",         label:"노쇼",       cls:"st-nos"  },
+    EXPIRED:         { key:"EXPIRED",         label:"만료",       cls:"st-exp"  },
+    CLOSED:          { key:"CLOSED",          label:"정산 종결",  cls:"st-closed" }
+  };
+
+  /* 기획서 5.1 허용 전이 + 운영 예외 2종(*) — 이 표 밖의 전이는 서버(코드)가 거절한다
+     * CONFIRMED→NO_SHOW/COMPLETED : 배치 부재 단계의 스킵 전이 (PRE_USE·IN_USE는 시각으로 파생 표시)
+     * NO_SHOW→COMPLETED           : 24시간 내 노쇼 정정 (9.3절 운영 규칙)                       */
+  const TRANSITIONS = {
+    HOLD:            ["PENDING_PAYMENT","EXPIRED","CONFIRMED"],
+    PENDING_PAYMENT: ["CONFIRMED","EXPIRED"],
+    CONFIRMED:       ["PRE_USE","CANCELLED","NO_SHOW","COMPLETED"],
+    PRE_USE:         ["IN_USE","NO_SHOW"],
+    IN_USE:          ["COMPLETED"],
+    COMPLETED:       ["CLOSED"],
+    CANCELLED:       ["CLOSED"],
+    NO_SHOW:         ["CLOSED","COMPLETED"],
+    EXPIRED:         [],
+    CLOSED:          []
+  };
+  const canGo = (from, to) => (TRANSITIONS[from]||[]).includes(to);
+
+  /* 기획서 5.3 — 보증금 상태 (검수→환급/차감→이의→확정) */
+  const DEPOSIT = {
+    NONE:               { label:"채널 관리",  cls:"st-exp"  },
+    RECEIVED:           { label:"수납",       cls:"st-conf" },
+    INSPECTION_PENDING: { label:"검수 중",    cls:"st-pre"  },
+    REFUND_SCHEDULED:   { label:"환급 예정",  cls:"st-pend" },
+    CLAIM_PROPOSED:     { label:"차감 제안",  cls:"st-nos"  },
+    DISPUTED:           { label:"이의 접수",  cls:"st-hold" },
+    PARTIAL_DEDUCTED:   { label:"일부 차감",  cls:"st-nos"  },
+    FULL_DEDUCTED:      { label:"전액 차감",  cls:"st-cxl"  },
+    REFUNDED:           { label:"환급 완료",  cls:"st-done" }
   };
 
   const CHANNELS = {
@@ -559,7 +648,7 @@ SP.rules = (() => {
 
   const fmtDT = d => `${d.getMonth()+1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-  return { STATUS, CHANNELS, PAY, POLICY, ROLES, PERM, CANCEL_REASONS, MSG_TPL,
+  return { STATUS, TRANSITIONS, canGo, DEPOSIT, CHANNELS, PAY, POLICY, ROLES, PERM, CANCEL_REASONS, MSG_TPL,
            settlementStage, STAGE_SEQ,
            fmtWon, fmtNum, fmtPct, fmtDate, fmtMD, fmtTime, fmtDateK, fmtDT,
            fmtPeople, maskPhone, refundable, pad2, WD };
@@ -672,6 +761,197 @@ SP.data = (() => {
     const perH = Math.round(base/5);
     return (hours>=5? base : perH*hours) + extra*(b.addFee||P.extraFee);
   }
+
+  /* ═══════ 통합 Core — 기획서 5장 (상태·이벤트·원장) ═══════ */
+  let evSeq=1, lgSeq=1, rqSeq=1;
+  const events=[];        // 5.6 이벤트 로그 — 상태 변화의 불변 기록
+  const ledger=[];        // 5.4 금전 원장 — 덮어쓰지 않는다, 조정은 반대 라인 추가
+  const reconQueue=[];    // 7.3·7.5 대사 대기함 — 채널·결제 불일치를 사람이 해소
+
+  const _by = () => (SP.auth && SP.auth.user && SP.auth.user.name) || "시스템";
+
+  function logEvent(type, refId, detail){
+    events.unshift({ id:"E"+String(evSeq++).padStart(4,"0"), at:new Date(),
+      type, refId:refId||"", detail:detail||"", by:_by() });
+    if (events.length>400) events.length=400;
+  }
+  function addLedger(o){
+    const row={ id:"L"+String(lgSeq++).padStart(4,"0"), at:new Date(),
+      refId:o.refId||"", kind:o.kind, amount:Math.round(o.amount||0),
+      memo:o.memo||"", by:_by() };
+    ledger.unshift(row);
+    if (ledger.length>600) ledger.length=600;
+    return row;                                     // 수정·삭제 API는 만들지 않는다 (원장 제1원칙)
+  }
+  const ledgerOf = refId => ledger.filter(l=>l.refId===refId);
+  const ledgerSum = refId => ledgerOf(refId).reduce((a,l)=>a+l.amount,0);
+
+  function addRecon(o){
+    const q={ id:"Q"+String(rqSeq++).padStart(3,"0"), at:new Date(),
+      kind:o.kind, refId:o.refId||"", note:o.note||"", src:o.src||"",
+      branchId:o.branchId||"", lockKey:o.lockKey||"", state:"OPEN", by:_by() };
+    reconQueue.unshift(q);
+    logEvent("ReconOpened", q.refId, `[${o.kind}] ${o.note||""}`.trim());
+    return q;
+  }
+  function resolveRecon(id, memo){
+    const q=reconQueue.find(x=>x.id===id); if(!q||q.state!=="OPEN") return false;
+    q.state="RESOLVED"; q.resolvedAt=new Date(); q.resolvedBy=_by(); q.resolveMemo=memo||"";
+    logEvent("ReconResolved", q.refId, `${q.kind} 해소${memo?" — "+memo:""}`);
+    return true;
+  }
+
+  const EV_OF = { CONFIRMED:"ReservationConfirmed", CANCELLED:"ReservationCancelled",
+    NO_SHOW:"NoShowMarked", COMPLETED:"CheckOutCompleted", EXPIRED:"HoldExpired",
+    CLOSED:"ReservationClosed", PRE_USE:"PreUseEntered", IN_USE:"InUseEntered",
+    PENDING_PAYMENT:"PaymentStarted" };
+
+  /* 5.1 두 가지 강제 규칙의 구현 — 표에 없는 전이는 여기서 거절된다 */
+  function setStatus(r, to, opt){
+    opt=opt||{};
+    const from=r.status;
+    if (from===to) return { ok:true, noop:true };
+    if (!R.canGo(from, to))
+      return { ok:false, reason:`${R.STATUS[from].label} → ${R.STATUS[to]?R.STATUS[to].label:to} 전이는 허용되지 않습니다 (5.1절)` };
+    r.status=to;
+    const now=new Date();
+    if (to==="CANCELLED") r.cancelAt=now;
+    if (to==="NO_SHOW")   r.noshowAt=now;
+    if (to==="EXPIRED")   r.expiredAt=now;
+    if (to==="COMPLETED" && from==="NO_SHOW") r.noshowAt=null;   // 정정
+    const act = opt.act || `상태 ${R.STATUS[from].label} → ${R.STATUS[to].label}${opt.note?" — "+opt.note:""}`;
+    (r.audit ||= []).push({ at:now, who:_by(), act });
+    logAudit("예약", r.id, act);
+    logEvent(EV_OF[to]||"StatusChanged", r.id, `${R.STATUS[from].label} → ${R.STATUS[to].label}`);
+    if (SP.persist) SP.persist.touch(r);
+    if (["CANCELLED","EXPIRED"].includes(to) || from==="HOLD") occInvalidate();
+    return { ok:true, from };
+  }
+
+  /* PRE_USE·IN_USE는 배치 전 단계에선 시각으로 파생해 보여준다 (저장 상태는 CONFIRMED 유지) */
+  function effStatus(r){
+    if (r.status!=="CONFIRMED") return r.status;
+    if (keyOf(r.useDate)!==keyOf(NOW)) return "CONFIRMED";
+    const h=NOW.getHours()+NOW.getMinutes()/60;
+    if (h>=r.sh && h<r.eh) return "IN_USE";
+    if (h>=r.sh-3 && h<r.sh) return "PRE_USE";
+    return "CONFIRMED";
+  }
+
+  /* 5.5 견적 스냅샷 — 결제한 가격은 요금표가 바뀌어도 그대로 재현된다 */
+  function makeQuote(b, room, slot, hours, extra, date, total){
+    return { at:new Date(), slot, hours,
+      unit: total - extra*(b.addFee||15000),
+      extra, addFee:(b.addFee||15000), extraAmt: extra*(b.addFee||15000),
+      deposit: b.depositLabel||"-",
+      policy: "이용 7일 전까지 전액 환불 · 6일 이내 환불 불가",
+      total };
+  }
+
+
+  /* ═══════ 노쇼 · 분쟁 · 보증금 — 기획서 5.3 · 6.7 · 9.3 · 9.7 ═══════ */
+  let icSeq=1;
+  const incidents=[];
+  const IC_RANK={ PROPOSED:1, DISPUTED:2, WITHDRAWN:3, CONFIRMED:3 };
+
+  function addIncident(o){
+    const ic={ id:"D"+String(icSeq++).padStart(3,"0"), at:new Date(),
+      resId:o.resId, branchId:o.branchId, kind:o.kind, note:o.note||"",
+      photos:(o.photos||[]).slice(0,6), amount:Math.round(o.amount||0),
+      state:"PROPOSED", by:_by(),
+      disputeUntil: addDays(NOW, settings.disputeDays) };
+    incidents.unshift(ic);
+    logEvent("DepositClaimProposed", ic.resId,
+      `[${ic.kind}] ${ic.amount.toLocaleString("ko-KR")}원 제안 — 고객 통지 · 이의 ${settings.disputeDays}일`);
+    logAudit("분쟁", ic.resId, `차감 제안 등록 — [${ic.kind}] ${ic.amount.toLocaleString("ko-KR")}원`);
+    return ic;
+  }
+  function disputeIncident(id, note){
+    const ic=incidents.find(x=>x.id===id);
+    if(!ic || ic.state!=="PROPOSED") return { ok:false, reason:"이의는 차감 제안 상태에서만 접수됩니다" };
+    ic.state="DISPUTED"; ic.disputedAt=new Date(); ic.disputeNote=note||"";
+    logEvent("DepositDisputed", ic.resId, `[${ic.kind}] 고객 이의 접수 — 환급 · 차감 보류`);
+    logAudit("분쟁", ic.resId, "이의 접수 — 본사 중립 검토 시작");
+    return { ok:true };
+  }
+  /* 9.7 — 차감 확정은 증빙 · 기준표 · 통지 · 이의 기간 없이는 불가 */
+  function confirmDeduct(id, opt){
+    opt=opt||{};
+    const ic=incidents.find(x=>x.id===id);
+    if(!ic) return { ok:false, reason:"대상 없음" };
+    if(ic.state==="CONFIRMED"||ic.state==="WITHDRAWN") return { ok:false, reason:"이미 종결된 건입니다" };
+    if(!(ic.photos&&ic.photos.length)) return { ok:false, reason:"사진 증빙 없이는 확정할 수 없습니다 (9.7절)" };
+    if(!(ic.amount>0)) return { ok:false, reason:"차감 금액이 없습니다" };
+    if(ic.state==="DISPUTED" && !opt.master)
+      return { ok:false, reason:"이의가 접수된 건의 확정은 마스터만 가능합니다 (9.7절)" };
+    if(NOW < ic.disputeUntil && !opt.master)
+      return { ok:false, reason:`이의 기간(${settings.disputeDays}일) 경과 전 확정은 마스터만 가능합니다` };
+    ic.state="CONFIRMED"; ic.confirmedAt=new Date(); ic.confirmedBy=_by();
+    addLedger({ refId:ic.resId, kind:"DEPOSIT_DEDUCT", amount:-ic.amount,
+      memo:`[${ic.kind}] 보증금 차감 확정${opt.master&&NOW<ic.disputeUntil?" (마스터 예외 승인)":""}` });
+    logEvent("DepositDeducted", ic.resId,
+      `[${ic.kind}] ${ic.amount.toLocaleString("ko-KR")}원 차감 — 결과 통지 · 정산 라인 반영`);
+    logAudit("분쟁", ic.resId, `차감 확정 — ${ic.amount.toLocaleString("ko-KR")}원`);
+    return { ok:true };
+  }
+  function withdrawIncident(id, memo){
+    const ic=incidents.find(x=>x.id===id);
+    if(!ic || ic.state==="CONFIRMED"||ic.state==="WITHDRAWN") return { ok:false, reason:"철회할 수 없는 상태" };
+    ic.state="WITHDRAWN"; ic.withdrawnAt=new Date(); ic.withdrawMemo=memo||"";
+    logEvent("DepositRefundScheduled", ic.resId, `[${ic.kind}] 차감 철회 — 환급 예정 전환`);
+    logAudit("분쟁", ic.resId, "차감 제안 철회");
+    return { ok:true };
+  }
+  const incidentsOf = resId => incidents.filter(i=>i.resId===resId);
+
+  /* 5.3 보증금 상태 파생 — 분쟁이 있으면 분쟁이, 없으면 시간이 결정한다 */
+  function depositStateOf(r){
+    const ics=incidentsOf(r.id);
+    const conf=ics.filter(i=>i.state==="CONFIRMED");
+    if(conf.length){
+      const sum=conf.reduce((a,i)=>a+i.amount,0);
+      return sum>=settings.deposit? "FULL_DEDUCTED":"PARTIAL_DEDUCTED";
+    }
+    if(ics.some(i=>i.state==="DISPUTED")) return "DISPUTED";
+    if(ics.some(i=>i.state==="PROPOSED")) return "CLAIM_PROPOSED";
+    if(r.pay==="channel") return "NONE";
+    if(r.status==="CANCELLED"||r.status==="EXPIRED") return r.refund? "REFUNDED":"NONE";
+    if(r.status==="NO_SHOW") return "INSPECTION_PENDING";
+    if(r.status==="COMPLETED"||r.status==="CLOSED"){
+      const end=new Date(r.useDate); end.setHours(r.eh,0,0,0);
+      const hrs=(NOW-end)/3600e3;
+      if(hrs < settings.inspectHours) return "INSPECTION_PENDING";
+      if(hrs < 72) return "REFUND_SCHEDULED";
+      return "REFUNDED";
+    }
+    return "RECEIVED";
+  }
+
+  /* 반복 위반 고객 — 차감 확정 2회부터 예약 제한 (9.3) */
+  function isFlagged(phone){
+    if(!phone) return false;
+    const n=String(phone).replace(/\D/g,"");
+    let cnt=0;
+    incidents.forEach(i=>{
+      if(i.state!=="CONFIRMED") return;
+      const rr=reservations.find(x=>x.id===i.resId);
+      if(rr && String(rr.phone).replace(/\D/g,"")===n) cnt++;
+    });
+    return cnt>=2;
+  }
+  function flaggedList(){
+    const map={};
+    incidents.forEach(i=>{
+      if(i.state!=="CONFIRMED") return;
+      const rr=reservations.find(x=>x.id===i.resId); if(!rr||!rr.phone) return;
+      const k=String(rr.phone).replace(/\D/g,"");
+      (map[k] ||= { phone:rr.phone, name:rr.name, cnt:0, last:i.kind }).cnt++;
+      map[k].last=i.kind;
+    });
+    return Object.values(map).filter(x=>x.cnt>=2);
+  }
+
+
   const hostPhone = b => {
     const m=(b.ownerRaw||"").match(/01[016-9][\s\-]?\d{3,4}[\s\-]?\d{4}/);
     return m ? m[0].replace(/\s/g,"-") : "010-2254-9580";     // 본사 예약팀
@@ -813,7 +1093,24 @@ SP.data = (() => {
   ];
 
   /* ── 운영 설정 · 조정 저장소 · 전역 변경 이력 ── */
-  const settings = { feeRate: 0.20 };                 // 수수료율 기본 20% — 관리자 변경 가능
+  /* web_settings — 정책 수치는 코드가 아니라 여기서 산다 (9.1·9.3·9.4) */
+  const settings = {
+    feeRate: 0.20,                                    // 본사 수수료 (점주 8 : 본사 2)
+    deposit: 80000,                                   // 보증금
+    refundFullDays: 7,                                // 7일 전 전액 환불
+    disputeDays: 7,                                   // 차감 이의제기 기간
+    inspectHours: 24,                                 // 퇴실 후 검수 신고 시한
+    deduct: {                                         // 9.3 차감 기준표
+      "청소 미이행": { min:20000, max:50000, note:"오염 정도에 따라" },
+      "비품 파손":   { min:0,     max:0,     note:"실비 — 구매가 증빙" },
+      "소음 · 민원": { min:30000, max:30000, note:"경고 1회 후 재발 시 + 예약 제한" },
+      "인원 초과":   { min:50000, max:50000, note:"+ 즉시 시정 요청" },
+      "실내 흡연":   { min:80000, max:80000, note:"전액 + 예약 제한" }
+    },
+    point: { rate:5, plusRate:7, vipRate:10,            // 9.4 적립률 — 등급별 상향
+             plusCount:3, vipCount:6, expireMonths:12 },// 클럽 기준(가안 — 협의체 확정 전)
+    anomaly: { resDrop:30, noshowX:2, revDrop:0.6, settleDrop:40 } // 6.3 이상 탐지 임계값
+  };
   const hostAdj  = {};                                // `${branchId}-${YYYY-MM}` → {other, cost, rate}
   const auditLog = [];                                // {at, user:{id,name}, action, target}
 
@@ -1179,7 +1476,637 @@ SP.data = (() => {
 
   const batchAt = new Date(TODAY.getTime()+3*3600000);       // 오늘 03:00 집계
 
-  return { NOW, TODAY, wdIdx, WD_LABEL, SITE, addDays, keyOf, dayMs,
+  /* ═══════ 3단계 — 회원 · 리뷰 · 문의 · 제휴 · 포인트 (6.3 P0 · 8.1 · 9.4) ═══════ */
+  const rng3=(seed=>()=> (seed=(seed*1103515245+12345)%2147483648)/2147483648)(260815);
+  const pick3=a=>a[Math.floor(rng3()*a.length)];
+  const upNow=()=>Date.now();
+
+  /* ── 리뷰 ── */
+  const REVIEW_TXT=[
+    "친구 생일파티로 썼는데 자리도 넓고 노래방 최고였어요","사진보다 실물이 좋아요. 재방문 의사 있습니다",
+    "체크인 안내가 정확해서 헤매지 않았어요","보드게임 종류가 많아서 시간 가는 줄 몰랐네요",
+    "청소 상태가 아쉬웠습니다. 환기 부탁드려요","단체로 갔는데 주차 안내가 자세해서 편했어요",
+    "빔프로젝터 화질 좋고 음향도 괜찮았어요","가격 대비 만족. 다음엔 밤타임으로 갈게요",
+    "도어락 비번이 늦게 와서 5분 기다렸어요","바베큐 준비가 잘 되어 있어 편했습니다",
+    "위치 찾기가 조금 어려웠어요. 안내판 있으면 좋겠어요","분위기 좋고 감성적이라 사진 잘 나와요"];
+  const NAMES3=["김민준","이서연","박지호","최수아","정도윤","강하은","조시우","윤지아","임준서","한예은",
+    "오건우","서다인","신유준","권소율","황시온","안채원","송지환","문가온","양하람","배주원"];
+  const reviews=[];
+  (function(){
+    let n=1;
+    branches.forEach(b=>{
+      const cnt=2+Math.floor(rng3()*3);                 // 지점당 2~4건
+      for(let i=0;i<cnt;i++){
+        const r=rng3();
+        const rating= r<0.55?5 : r<0.82?4 : r<0.92?3 : 2;
+        const daysAgo=Math.floor(rng3()*45);
+        reviews.push({ id:"V"+String(n++).padStart(3,"0"),
+          at:addDays(TODAY,-daysAgo), branchId:b.id,
+          name:pick3(NAMES3), phone:"010-"+(2000+Math.floor(rng3()*8000))+"-"+(1000+Math.floor(rng3()*9000)),
+          rating, text:pick3(REVIEW_TXT),
+          state: rng3()<0.06? "신고":"게시",
+          reply:"", replyBy:"", replyAt:null, up:0 });
+      }
+    });
+  })();
+  function reviewReply(id, text){
+    const v=reviews.find(x=>x.id===id); if(!v||!text) return false;
+    v.reply=text; v.replyBy=_by(); v.replyAt=new Date(); v.up=upNow();
+    logEvent("ReviewReplied", v.id, `${branchById[v.branchId].name} · ★${v.rating}`);
+    logAudit("리뷰", v.id, "답글 등록");
+    return true;
+  }
+  function reviewSetState(id, state){
+    const v=reviews.find(x=>x.id===id); if(!v) return false;
+    v.state=state; v.up=upNow();
+    logEvent(state==="숨김"?"ReviewHidden":"ReviewPublished", v.id, branchById[v.branchId].name);
+    logAudit("리뷰", v.id, state==="숨김"?"숨김 처리":"게시 복원");
+    return true;
+  }
+
+  /* ── 문의 ── */
+  const INQ_SUBJ=[["환불 문의","7일 전 취소인데 환불 언제 되나요?"],["예약 변경","인원이 늘어서 큰 방으로 바꾸고 싶어요"],
+    ["시설 문의","빔프로젝터 HDMI 케이블 있나요?"],["주차 문의","차 3대인데 전부 주차 가능한가요?"],
+    ["단체 견적","회사 워크샵 30명 견적 부탁드립니다"],["보증금","보증금 환급이 아직 안 들어왔어요"],
+    ["애견 동반","소형견 두 마리 가능한가요?"],["결제 오류","결제했는데 확정 문자가 안 와요"]];
+  const inquiries=[];
+  (function(){
+    for(let i=1;i<=26;i++){
+      const [subj,body]=pick3(INQ_SUBJ);
+      const hAgo=Math.floor(rng3()*90);
+      const st= hAgo>50? "완료" : hAgo>26? pick3(["처리중","완료"]) : pick3(["대기","대기","처리중"]);
+      inquiries.push({ id:"I"+String(i).padStart(3,"0"),
+        at:new Date(NOW-hAgo*3600e3),
+        channel:pick3(["카카오톡","전화","웹"]), name:pick3(NAMES3),
+        phone:"010-"+(2000+Math.floor(rng3()*8000))+"-"+(1000+Math.floor(rng3()*9000)),
+        branchId: rng3()<0.7? pick3(branches).id : "",
+        subject:subj, body, state:st,
+        assignee: st==="대기"?"":pick3(["김서연","박지훈"]),
+        answer: st==="완료"?"안내해 드렸습니다":"", up:0 });
+    }
+  })();
+  function inquiryTake(id){
+    const q=inquiries.find(x=>x.id===id); if(!q) return false;
+    q.state="처리중"; q.assignee=_by(); q.up=upNow();
+    logAudit("문의", q.id, "담당 지정 — "+q.assignee);
+    return true;
+  }
+  function inquiryClose(id, answer){
+    const q=inquiries.find(x=>x.id===id); if(!q||!answer) return false;
+    q.state="완료"; q.answer=answer; q.assignee=q.assignee||_by(); q.closedAt=new Date(); q.up=upNow();
+    logEvent("InquiryClosed", q.id, q.subject);
+    logAudit("문의", q.id, "처리 완료");
+    return true;
+  }
+
+  /* ── 제휴 — 파트너 · 패키지 · 주문 (6.5 · 8.1) ── */
+  const partners=[
+    { id:"P1", name:"스윗케이크 공방",  cat:"케이크",   fee:0.12, lead:"D-2 주문", state:"운영", claims:0, up:0 },
+    { id:"P2", name:"벌룬앤가랜드",     cat:"장식",     fee:0.15, lead:"D-3 주문", state:"운영", claims:1, up:0 },
+    { id:"P3", name:"모두의 케이터링",  cat:"케이터링", fee:0.10, lead:"D-3 주문", state:"운영", claims:0, up:0 },
+    { id:"P4", name:"포토레디 스냅",    cat:"촬영",     fee:0.15, lead:"D-7 예약", state:"운영", claims:0, up:0 },
+    { id:"P5", name:"드링크박스",       cat:"음료",     fee:0.10, lead:"D-1 주문", state:"운영", claims:2, up:0 }
+  ];
+  const packages=[
+    { id:"K1", name:"생일파티 세트",     items:[["P1","레터링 케이크"],["P2","풍선 · 가랜드"],["P5","음료 세트"]],
+      price:[[8,89000],[15,129000],[30,189000]], note:"인원 구간별 정가" },
+    { id:"K2", name:"브라이덜샤워 세트", items:[["P2","포토존 장식"],["P4","촬영 소품"],["P3","디저트 케이터링"]],
+      price:[[8,159000],[15,219000],[30,309000]], note:"인원 구간별 정가" },
+    { id:"K3", name:"워크샵 세트",       items:[["P3","커피 · 다과 + 도시락"],["P5","생수 · 음료"]],
+      price:[[10,15000],[999,15000]], note:"1인당 단가 (B2B)" }
+  ];
+  function pkgPrice(pk, people){
+    if(pk.id==="K3") return 15000*people;
+    const t=pk.price.find(x=>people<=x[0])||pk.price[pk.price.length-1];
+    return t[1];
+  }
+  const orders=[];
+  (function(){
+    let n=1;
+    const pool=reservations.filter(r=>(r.status==="COMPLETED"||r.status==="CONFIRMED"));
+    for(let i=0;i<38 && i<pool.length;i++){
+      const r=pool[Math.floor(rng3()*pool.length)];
+      if(orders.some(o=>o.resId===r.id)) continue;
+      const pk=pick3(packages);
+      const people=(r.base||8)+(r.extra||0);
+      const amt=pkgPrice(pk, people);
+      const st= r.status==="COMPLETED"? (rng3()<0.9?"완료":"지연")
+              : pick3(["신규","수락","수락"]);
+      orders.push({ id:"O"+String(n++).padStart(3,"0"), at:addDays(r.useDate,-3),
+        resId:r.id, branchId:r.branchId, pkgId:pk.id, pkgName:pk.name,
+        items:pk.items.map(([pid,nm])=>({partnerId:pid, name:nm})),
+        amount:amt, state:st, up:0 });
+    }
+  })();
+  function orderSetState(id, state){
+    const o=orders.find(x=>x.id===id); if(!o) return false;
+    o.state=state; o.up=upNow();
+    logEvent(state==="수락"?"PartnerOrderAccepted":state==="완료"?"PartnerOrderCompleted":"PartnerOrderUpdated",
+      o.resId, `${o.pkgName} · ${o.id}`);
+    logAudit("제휴", o.id, "주문 "+state);
+    return true;
+  }
+  function addOrder(resId, pkgId){
+    const r=reservations.find(x=>x.id===resId);
+    if(!r) return { ok:false, reason:"예약을 찾을 수 없습니다" };
+    if(!["CONFIRMED","COMPLETED"].includes(r.status)) return { ok:false, reason:"확정 · 완료 예약에만 부착할 수 있습니다" };
+    const pk=packages.find(x=>x.id===pkgId);
+    const o={ id:"O"+String(orders.length+101).padStart(3,"0"), at:new Date(),
+      resId:r.id, branchId:r.branchId, pkgId:pk.id, pkgName:pk.name,
+      items:pk.items.map(([pid,nm])=>({partnerId:pid, name:nm})),
+      amount:pkgPrice(pk,(r.base||8)+(r.extra||0)), state:"신규", up:upNow() };
+    orders.unshift(o);
+    logEvent("PartnerOrderCreated", r.id, `${pk.name} · ${o.id} — 구성 상품별 제휴사 분리 전달`);
+    logAudit("제휴", o.id, "수기 주문 등록 — "+pk.name);
+    return { ok:true, order:o };
+  }
+  function partnerToggle(id){
+    const pt=partners.find(x=>x.id===id); if(!pt) return false;
+    pt.state = pt.state==="운영"? "일시중지":"운영"; pt.up=upNow();
+    logEvent("ListingSuspended", pt.id, `${pt.name} — ${pt.state}`);
+    logAudit("제휴", pt.id, "파트너 "+pt.state);
+    return true;
+  }
+  function attachStats(){
+    const mk=`${NOW.getFullYear()}-${NOW.getMonth()}`;
+    const doneM=reservations.filter(r=>r.status==="COMPLETED" &&
+      `${r.useDate.getFullYear()}-${r.useDate.getMonth()}`===mk);
+    const withPk=doneM.filter(r=>orders.some(o=>o.resId===r.id));
+    const sales=orders.filter(o=>o.state==="완료" &&
+      `${o.at.getFullYear()}-${o.at.getMonth()}`===mk).reduce((a,o)=>a+o.amount,0);
+    return { done:doneM.length, attach:withPk.length,
+      rate: doneM.length? withPk.length/doneM.length:0, sales,
+      late: orders.filter(o=>o.state==="지연").length };
+  }
+
+  /* ── 포인트 원장 — 적립 · 사용 · 조정을 라인으로만 (9.4 · 지점 정산과 분리) ── */
+  let ptSeq=1;
+  const points=[];
+  (function(){
+    reservations.filter(r=>r.status==="COMPLETED" && r.pay!=="channel" && r.phone).slice(0,60)
+      .forEach(r=>{
+        points.push({ id:"T"+String(ptSeq++).padStart(3,"0"), at:r.useDate,
+          phone:r.phone, name:r.name, kind:"적립",
+          amount:Math.round(r.amount*settings.point.rate/100),
+          memo:"자체예약 적립 "+settings.point.rate+"%", resId:r.id, by:"시스템" });
+      });
+  })();
+  const pointsOf = phone => {
+    const n=String(phone||"").replace(/\D/g,"");
+    return points.filter(t=>String(t.phone).replace(/\D/g,"")===n);
+  };
+  const pointBalance = phone => pointsOf(phone).reduce((a,t)=>a+t.amount,0);
+  function addPoints(phone, name, amount, memo){
+    if(!phone||!amount||!memo) return { ok:false, reason:"금액과 사유는 필수입니다" };
+    const t={ id:"T"+String(ptSeq++).padStart(3,"0"), at:new Date(),
+      phone, name:name||"", kind: amount>0? "조정(+)":"조정(−)",
+      amount:Math.round(amount), memo, by:_by() };
+    points.unshift(t);
+    logEvent("PointsAdjusted","",`${name||phone} ${amount>0?"+":""}${amount.toLocaleString("ko-KR")}P — ${memo}`);
+    logAudit("포인트", phone, `${amount>0?"+":""}${amount.toLocaleString("ko-KR")}P — ${memo}`);
+    return { ok:true };
+  }
+
+
+  /* ═══════ 4단계 — 반입·반출 5단계(8.2) · 처리 대기함 · 이상 탐지 · 긴급 트리거(표 6-9) ═══════ */
+  const normS=t=>String(t??"").replace(/\s+/g,"");
+  function findBranchByName(t){
+    const n=normS(t); if(!n) return null;
+    return branches.find(b=>normS(b.name)===n||normS(b.shortName)===n||normS(b.code)===n)
+      || branches.find(b=>n.includes(normS(b.area))&&n.includes(normS(b.shortName)))
+      || branches.find(b=>n.includes(normS(b.name)))
+      || branches.find(b=>normS(b.shortName).length>=3 && n.includes(normS(b.shortName)));
+  }
+  const parseD4=v=>{ let m=String(v).match(/(20\d{2})[.\-\/년\s]+(\d{1,2})[.\-\/월\s]+(\d{1,2})/);
+    if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+    m=String(v).match(/^(\d{1,2})[\/\.](\d{1,2})$/);
+    return m? new Date(TODAY.getFullYear(),+m[1]-1,+m[2]) : null; };
+  const parseH4=v=>{ const m=String(v).match(/(\d{1,2})\s*[:시]/); return m? +m[1] : null; };
+  const pkgH4=t=>{ t=String(t||"");
+    if(/올데이/.test(t)) return [12,22];
+    if(/투나잇/.test(t)) return [19,24];
+    if(/3\s*시간/.test(t)) return [14,17];
+    if(/밤/.test(t)) return [18,23];
+    if(/낮|오전/.test(t)) return [12,17];
+    return null; };
+
+  /* ── 슬롯 긴급 잠금 · 트리거 ── */
+  const slotLocks=[];
+  const payHold={};
+  const isLockedSlot=(roomId,date,slot)=>slotLocks.some(l=>l.id===roomId+"|"+keyOf(date)+"|"+slot);
+  function runTriggers(){
+    /* ① 동일 슬롯 중복 확정 → 즉시 잠금 (자동) */
+    const map={};
+    reservations.forEach(r=>{
+      if(!["CONFIRMED","COMPLETED"].includes(r.status)) return;
+      if(r.useDate<TODAY) return;
+      (map[r.roomId+"|"+keyOf(r.useDate)] ||= []).push(r);
+    });
+    Object.entries(map).forEach(([k,arr])=>{
+      for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+        const a=arr[i], c=arr[j];
+        if(a.sh < c.eh && c.sh < a.eh){
+          const lk=k+"|"+a.slot;
+          if(slotLocks.some(l=>l.id===lk)) continue;
+          slotLocks.push({id:lk, at:new Date(), ids:[a.id,c.id]});
+          addRecon({kind:"긴급 · 중복 확정", refId:a.id, lockKey:lk,
+            note:`${a.id} · ${c.id} 같은 슬롯 — 신규 판매 즉시 잠금 · 고객 보호(대체 지점 · 보상) 절차 개시`,
+            src:"긴급 트리거"});
+          logEvent("EmergencyLock", a.id, "동일 슬롯 중복 확정 감지 — 판매 잠금 (표 6-9①)");
+        }
+      }
+    });
+    /* ③ 도어락 · 입실 문의 급증 (지점 단위) → 일시 중지 제안 */
+    branches.forEach(b=>{
+      const n=inquiries.filter(q=>q.branchId===b.id && q.state!=="완료" &&
+        (NOW-q.at)/36e5<24 && /도어락|비밀번호|출입|입장/.test(q.subject+q.body)).length;
+      if(n>=3 && !reconQueue.some(x=>x.state==="OPEN"&&x.kind==="긴급 · 도어락"&&x.branchId===b.id)){
+        addRecon({kind:"긴급 · 도어락", branchId:b.id,
+          note:`${b.name} — 24시간 내 출입 문의 ${n}건 · 임시 비밀번호 폴백 안내 · 신규 판매 일시 중지 검토`,
+          src:"긴급 트리거"});
+        logEvent("EmergencyDoorAlert", b.code, `${b.name} 출입 문의 급증 (${n}건)`);
+      }
+    });
+  }
+  function unlockSlot(lockKey){
+    const i=slotLocks.findIndex(l=>l.id===lockKey);
+    if(i<0) return false;
+    slotLocks.splice(i,1); occInvalidate();
+    logEvent("EmergencyUnlock","",lockKey+" — 잠금 해제 · 판매 재개");
+    logAudit("긴급","슬롯",lockKey+" 잠금 해제");
+    return true;
+  }
+  function reportPayMismatch(resId, pgAmt){
+    const r=reservations.find(x=>x.id===resId); if(!r) return false;
+    r.intIssue="결제 대사 차이 — 확정 보류";
+    if(SP.persist) SP.persist.touch(r);
+    addRecon({kind:"긴급 · 결제 불일치", refId:resId,
+      note:`내부 ${r.amount.toLocaleString("ko-KR")}원 vs PG ${(+pgAmt||0).toLocaleString("ko-KR")}원 — 확정 보류 · 중복 결제 확인`,
+      src:"긴급 트리거"});
+    logEvent("PaymentMismatch", resId, "승인액 불일치 (표 6-9②)");
+    return true;
+  }
+  function requestAccountChange(branchId, memo){
+    const b=branchById[branchId]; if(!b) return false;
+    payHold[branchId]=true;
+    addRecon({kind:"긴급 · 계좌 변경", branchId,
+      note:`${b.name} — 정산 계좌 변경 시도. 지급 보류 · 기존 연락처 본인 재확인 (9.7절)${memo?" · "+memo:""}`,
+      src:"긴급 트리거"});
+    logEvent("AccountChangeHeld", b.code, `${b.name} 계좌 변경 — 다음 지급 1회 보류`);
+    return true;
+  }
+
+  /* ── 반입 5단계 (8.2) — 템플릿 → 스테이징 → 드라이런 → 승인 반영 · 롤백 ── */
+  const batches=[]; let bSeq=1;
+  const IMPORT_COLS=["지점","이용일","시작","종료","예약자","연락처","인원","금액","패키지","채널"];
+  function buildImportTemplate(){
+    const ex1=[branches[1].name,fmtD(addDays(TODAY,14)),"12:00","17:00","홍길동","010-1234-5678","8","","낮","naver"];
+    const ex2=[branches[2].name,fmtD(addDays(TODAY,15)),"","","김파티","010-2345-6789","15","250,000","올데이","spacecloud"];
+    return { name:"쏘플_예약반입_템플릿.csv",
+      text:"\uFEFF"+IMPORT_COLS.join(",")+"\n"+ex1.join(",")+"\n"+ex2.join(",")+"\n"+
+        "# 위 두 줄은 예시입니다 — 지우고 실제 내역을 붙여넣으세요. 이 양식 그대로만 반입됩니다 (8.2①)\n" };
+  }
+  const fmtD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  function stageBatch(raw, srcName){
+    const lines=String(raw||"").replace(/^\uFEFF/,"").replace(/\r/g,"").split("\n")
+      .map(l=>l.trim()).filter(l=>l && !l.startsWith("#"));
+    if(!lines.length) return { ok:false, reason:"내용이 없습니다" };
+    const delim=lines[0].includes("\t")? "\t":",";
+    const head=lines[0].split(delim).map(c=>c.trim());
+    if(!head.includes("지점")||!head.includes("이용일"))
+      return { ok:false, reason:"고정 템플릿 양식이 아닙니다 — [템플릿 내려받기] 파일로만 반입할 수 있습니다 (8.2①)" };
+    const idx={}; IMPORT_COLS.forEach(c=>idx[c]=head.indexOf(c));
+    const rows=lines.slice(1).map(l=>l.split(delim).map(c=>c.trim()));
+    if(!rows.length) return { ok:false, reason:"자료 행이 없습니다" };
+    const b={ id:"B"+String(bSeq++).padStart(3,"0"), at:new Date(), by:_by(),
+      src:srcName||"붙여넣기", idx, rows, state:"STAGED", report:null, appliedIds:[], up:Date.now() };
+    batches.unshift(b);
+    logAudit("데이터", b.id, `스테이징 ${rows.length}행 — 운영 원장에는 아직 쓰지 않음 (8.2②)`);
+    return { ok:true, batch:b };
+  }
+  function draftRow(bt, row){
+    const g=c=>{ const i=bt.idx[c]; return i>=0? (row[i]??""):""; };
+    const b=findBranchByName(g("지점"));
+    if(!b) return { v:"ERR", reason:"지점 미매칭: "+(g("지점")||"(빈칸)") };
+    const date=parseD4(g("이용일"));
+    if(!date) return { v:"ERR", reason:"날짜 해석 실패: "+g("이용일") };
+    const ph=pkgH4(g("패키지"));
+    let sh=parseH4(g("시작")); if(sh==null) sh=ph? ph[0]:18;
+    let eh=parseH4(g("종료")); if(eh==null) eh=ph? ph[1]:Math.min(sh+5,24);
+    if(eh<=sh) eh=Math.min(sh+5,24);
+    const name=g("예약자")||"채널 고객";
+    const slot=sh<17? "day":"night";
+    if(isFlagged(g("연락처"))) return { v:"ERR", reason:"반복 위반 고객 — 예약 제한 (9.3)" };
+    if(isLockedSlot(b.rooms[0].id, date, slot)) return { v:"ERR", reason:"긴급 잠금 슬롯 — 중복 확정 조사 중" };
+    const dk=keyOf(date);
+    if(reservations.some(x=>x.branchId===b.id && keyOf(x.useDate)===dk &&
+        x.sh===sh && normS(x.name)===normS(name) && x.status!=="CANCELLED"))
+      return { v:"DUP", reason:"이미 등록된 건" };
+    const hit=conflictAny(b.rooms[0].id, date, sh, eh);
+    if(hit) return { v:"ERR", reason:`슬롯 충돌 — 기존 ${hit.id}` };
+    const people=parseInt(String(g("인원")).replace(/\D/g,""),10)||b.baseP;
+    const extra=Math.max(0, people-b.baseP);
+    const amtRaw=parseInt(String(g("금액")).replace(/\D/g,""),10);
+    const chRaw=(g("채널")||"naver").toLowerCase();
+    return { v:"OK", draft:{ b, date, sh, eh, slot, name,
+      phone:g("연락처")||"", extra,
+      amount: amtRaw>0? amtRaw : roomPrice(b, b.rooms[0], slot, Math.min(eh-sh,5), extra, date),
+      channel: chRaw.includes("space")||chRaw.includes("스클")? "spacecloud":"naver",
+      key: b.id+"|"+dk+"|"+sh+"|"+normS(name) } };
+  }
+  function dryRunBatch(id){
+    const bt=batches.find(x=>x.id===id);
+    if(!bt || bt.state!=="STAGED") return { ok:false, reason:"스테이징 상태에서만 검증합니다" };
+    const seen=new Set();
+    const verdicts=bt.rows.map((row,i)=>{
+      const d=draftRow(bt, row);
+      if(d.v==="OK"){
+        if(seen.has(d.draft.key)) return { i, v:"DUP", reason:"파일 안 중복 행" };
+        seen.add(d.draft.key);
+      }
+      return { i, v:d.v, reason:d.reason||"", name:d.draft? `${d.draft.b.name} ${fmtD(d.draft.date)} ${d.draft.sh}시 · ${d.draft.name}`:"" };
+    });
+    const okN=verdicts.filter(x=>x.v==="OK").length;
+    bt.report={ at:new Date(), okN,
+      dupN:verdicts.filter(x=>x.v==="DUP").length,
+      errN:verdicts.filter(x=>x.v==="ERR").length, verdicts };
+    bt.up=Date.now();
+    logAudit("데이터", bt.id, `드라이런 — 신규 ${okN} · 중복 ${bt.report.dupN} · 오류 ${bt.report.errN} (반영 전 미리보기 8.2③)`);
+    return { ok:true, report:bt.report };
+  }
+  function applyBatch(id){
+    const bt=batches.find(x=>x.id===id);
+    if(!bt || bt.state!=="STAGED") return { ok:false, reason:"이미 처리된 배치입니다" };
+    if(!bt.report) return { ok:false, reason:"드라이런(검증) 없이 반영할 수 없습니다 (8.2③→④)" };
+    const who=_by();
+    let okN=0;
+    bt.report.verdicts.forEach(v=>{
+      if(v.v!=="OK") {
+        if(v.v==="ERR") addRecon({kind:"반입 오류", note:`${bt.id} ${v.i+1}행 — ${v.reason}`, src:"엑셀 반입"});
+        return;
+      }
+      const d=draftRow(bt, bt.rows[v.i]);
+      if(d.v!=="OK"){ addRecon({kind:"반입 오류", note:`${bt.id} ${v.i+1}행 — ${d.reason} (반영 시점 재검증)`, src:"엑셀 반입"}); return; }
+      const {b,date,sh,eh,slot,name,phone,extra,amount,channel}=d.draft;
+      const nr={ id:"R"+(400000+Math.floor(Math.random()*99999)),
+        branchId:b.id, roomId:b.rooms[0].id, roomName:b.rooms[0].name,
+        name, phone, createdAt:new Date(), useDate:date, sh, eh, slot,
+        base:b.baseP, extra, amount, channel, pay:"channel", channelNo:"",
+        status:"CONFIRMED", deposit:"-", memo:"", intIssue:"", ownIssue:"", options:"",
+        checkin:false, refund:null, amountDue:0, memos:[],
+        audit:[{at:new Date(), who, act:`엑셀 반입 (${bt.id})`}],
+        batchId:bt.id };
+      nr.quote=makeQuote(b, b.rooms[0], slot, eh-sh, extra, date, amount);
+      reservations.unshift(nr);
+      if(SP.persist) SP.persist.addRes(nr.id);
+      bt.appliedIds.push(nr.id);
+      okN++;
+    });
+    bt.state="APPLIED"; bt.up=Date.now();
+    occInvalidate();
+    logEvent("BatchApplied", bt.id, `엑셀 반입 승인 — ${okN}건 등록 · 중복 ${bt.report.dupN} · 오류 ${bt.report.errN}`);
+    logAudit("데이터", bt.id, `승인 반영 ${okN}건 — 묶음 단위 롤백 가능 (8.2④)`);
+    runTriggers();
+    return { ok:true, okN };
+  }
+  function rollbackBatch(id){
+    const bt=batches.find(x=>x.id===id);
+    if(!bt || bt.state!=="APPLIED") return { ok:false, reason:"반영된 배치만 되돌릴 수 있습니다" };
+    let undone=0, skipped=0;
+    bt.appliedIds.forEach(rid=>{
+      const r=reservations.find(x=>x.id===rid);
+      if(!r){ skipped++; return; }
+      if(r.status!=="CONFIRMED" || ledgerOf(rid).length || incidentsOf(rid).length){ skipped++; return; }
+      const tr=setStatus(r,"CANCELLED",{act:`반입 롤백 (${bt.id})`});
+      if(tr.ok){ r.cancelReason={tag:"기타", note:`엑셀 반입 롤백 — ${bt.id}`}; undone++; }
+      else skipped++;
+    });
+    bt.state="ROLLED"; bt.up=Date.now();
+    logEvent("BatchRolledBack", bt.id, `${undone}건 취소 전환 · ${skipped}건 제외(변경 이력 있음)`);
+    logAudit("데이터", bt.id, `롤백 — ${undone}건 (기록은 취소로 보존, 삭제 없음)`);
+    return { ok:true, undone, skipped };
+  }
+  function buildExport(opt){
+    opt=opt||{};
+    const mask=opt.mask!==false;
+    if(!mask && !opt.master) return { ok:false, reason:"마스킹 해제 반출은 마스터만 가능합니다 (8.2⑤ · 9.7)" };
+    if(!mask && !(opt.reason||"").trim()) return { ok:false, reason:"원본 반출은 목적(사유) 기록이 필수입니다" };
+    const from=addDays(TODAY, -(opt.days||30));
+    const rows=reservations.filter(r=>r.useDate>=from)
+      .sort((a,b)=>b.useDate-a.useDate)
+      .map(r=>[r.id, branchById[r.branchId].name, fmtD(r.useDate),
+        r.sh+":00", r.eh+":00", R.STATUS[r.status].label, r.name,
+        mask? R.maskPhone(r.phone): r.phone, (r.base+r.extra)+"명",
+        r.amount, R.CHANNELS[r.channel]? R.CHANNELS[r.channel].label:r.channel].join(","));
+    const meta=`${rows.length}건 · 최근 ${opt.days||30}일 · ${mask?"연락처 마스킹":"원본 — "+opt.reason.trim()}`;
+    logAudit("데이터","반출",meta+" (감사 로그 8.2⑤)");
+    logEvent("DataExported","",meta);
+    return { ok:true, name:`쏘플_예약반출_${fmtD(TODAY)}${mask?"":"_원본"}.csv`,
+      text:"\uFEFF예약번호,지점,이용일,시작,종료,상태,예약자,연락처,인원,금액,채널\n"+rows.join("\n")+"\n" };
+  }
+
+  /* ── 처리 대기함 — 흩어진 할 일을 담당자 큐로 (6.3 P1) ── */
+  const taskAssign={};
+  function assignTask(key, who){
+    taskAssign[key]={ who, at:Date.now() };
+    logAudit("대기함", key, "담당 지정 — "+who);
+  }
+  function taskQueue(){
+    const q=[];
+    reconQueue.filter(x=>x.state==="OPEN").forEach(x=>q.push({
+      key:"recon:"+x.id, type:x.kind.startsWith("긴급")?"긴급":"대사",
+      label:`[${x.kind}]`, detail:x.note, at:x.at, refId:x.refId,
+      sev:x.kind.startsWith("긴급")?2:1, recon:x }));
+    incidents.forEach(ic=>{
+      if(ic.state==="DISPUTED") q.push({ key:"ic:"+ic.id, type:"분쟁", sev:2,
+        label:"이의 검토 (3영업일)", detail:`[${ic.kind}] ${ic.amount.toLocaleString("ko-KR")}원 — 환급·차감 보류 중`,
+        at:ic.disputedAt||ic.at, refId:ic.resId, go:"dispute" });
+      else if(ic.state==="PROPOSED" && NOW>ic.disputeUntil) q.push({ key:"ic:"+ic.id, type:"분쟁", sev:1,
+        label:"차감 확정 대기 (이의 기간 경과)", detail:`[${ic.kind}] ${ic.amount.toLocaleString("ko-KR")}원`,
+        at:ic.disputeUntil, refId:ic.resId, go:"dispute" });
+    });
+    pendingChanges.forEach((p,i)=>q.push({ key:"pc:"+(p.id||i), type:"콘텐츠", sev:1,
+      label:"호스트 수정 승인", detail:`${branchById[p.branchId]?branchById[p.branchId].name:""} — ${p.kind}${p.over?" · 2영업일 초과":""}`,
+      at:p.at||NOW, sev:p.over?2:1, go:"spaces" }));
+    inquiries.filter(i2=>i2.state!=="완료" && (NOW-i2.at)/36e5>24).forEach(i2=>q.push({
+      key:"iq:"+i2.id, type:"CS", sev:1, label:"문의 SLA 초과",
+      detail:`${i2.subject} — ${Math.floor((NOW-i2.at)/36e5)}시간 경과`, at:i2.at, go:"members" }));
+    reviews.filter(v=>v.state==="신고").forEach(v=>q.push({
+      key:"rv:"+v.id, type:"콘텐츠", sev:1, label:"리뷰 신고 검토",
+      detail:`${branchById[v.branchId].name} ★${v.rating} — ${v.text.slice(0,20)}`, at:v.at, go:"members" }));
+    orders.filter(o=>o.state==="지연").forEach(o=>q.push({
+      key:"od:"+o.id, type:"제휴", sev:1, label:"제휴 이행 지연",
+      detail:`${o.pkgName} · ${branchById[o.branchId].name}`, at:o.at, go:"partner" }));
+    Object.keys(payHold).filter(k=>payHold[k]).forEach(bid=>q.push({
+      key:"acct:"+bid, type:"긴급", sev:2, label:"정산 계좌 변경 검증",
+      detail:`${branchById[bid]?branchById[bid].name:bid} — 지급 1회 보류 · 본인 재확인`, at:NOW, go:"settle" }));
+    q.sort((a,b)=> b.sev-a.sev || a.at-b.at);
+    return q;
+  }
+
+  /* ── 이상 탐지 (6.3 P1) — 임계값은 settings.anomaly ── */
+  function anomalies(){
+    const A=settings.anomaly, out=[];
+    const between=(r,f,t)=>r.useDate>=f && r.useDate<t;
+    const okSt=["CONFIRMED","COMPLETED"];
+    const w0=addDays(TODAY,1), w7=addDays(TODAY,-7), w14=addDays(TODAY,-14), w28=addDays(TODAY,-28);
+    const cur=reservations.filter(r=>okSt.includes(r.status)&&between(r,w7,w0)).length;
+    const prev=reservations.filter(r=>okSt.includes(r.status)&&between(r,w14,w7)).length;
+    if(prev>=20 && cur < prev*(1-A.resDrop/100))
+      out.push({ sev:2, kind:"예약 급감",
+        detail:`최근 7일 ${cur}건 — 직전 7일 ${prev}건 대비 ${Math.round((1-cur/prev)*100)}%↓ (임계 ${A.resDrop}%)` });
+    branches.forEach(b=>{
+      const ns=(f,t)=>reservations.filter(r=>r.branchId===b.id&&r.status==="NO_SHOW"&&between(r,f,t)).length;
+      const c=ns(w14,w0), p2=ns(w28,w14);
+      if(c>=3 && c >= Math.max(1,p2)*A.noshowX)
+        out.push({ sev:2, kind:"노쇼 급증", branchId:b.id,
+          detail:`${b.name} — 최근 14일 ${c}건 (직전 ${p2}건, 임계 ×${A.noshowX})` });
+    });
+    const pubAll=reviews.filter(v=>v.state==="게시");
+    branches.forEach(b=>{
+      const rs=pubAll.filter(v=>v.branchId===b.id);
+      const recent=rs.filter(v=>v.at>=w14);
+      if(rs.length>=4 && recent.length>=3){
+        const avgAll=rs.reduce((a,v)=>a+v.rating,0)/rs.length;
+        const avgR=recent.reduce((a,v)=>a+v.rating,0)/recent.length;
+        if(avgAll-avgR>=A.revDrop)
+          out.push({ sev:1, kind:"리뷰 급락", branchId:b.id,
+            detail:`${b.name} — 최근 ★${avgR.toFixed(1)} (평소 ★${avgAll.toFixed(1)}, 임계 −${A.revDrop})` });
+      }
+    });
+    const mk=d=>`${d.getFullYear()}-${d.getMonth()}`;
+    const cm=mk(TODAY), pmD=new Date(TODAY.getFullYear(),TODAY.getMonth()-1,1), pm=mk(pmD);
+    branches.forEach(b=>{
+      const sum=key=>reservations.filter(r=>r.branchId===b.id&&r.status==="COMPLETED"&&mk(r.useDate)===key)
+        .reduce((a,r)=>a+r.amount,0);
+      const c=sum(cm), p2=sum(pm);
+      const dayFrac=TODAY.getDate()/new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0).getDate();
+      if(p2>=500000 && dayFrac>0.5 && c < p2*dayFrac*(1-A.settleDrop/100))
+        out.push({ sev:1, kind:"정산 이상치", branchId:b.id,
+          detail:`${b.name} — 이번 달 ${Math.round(c/10000)}만 (지난달 ${Math.round(p2/10000)}만 · 진도 대비 ${A.settleDrop}%↓)` });
+    });
+    return out.slice(0,6);
+  }
+
+
+  /* ═══════ 5단계 — 지점 건강도(8.3) · 창업 파이프라인 · 북극성(11장) ═══════ */
+  function branchHealth(){
+    const from=addDays(TODAY,-28), to=addDays(TODAY,1);
+    const pub=reviews.filter(v=>v.state==="게시");
+    return branches.map(b=>{
+      const rs=reservations.filter(r=>r.branchId===b.id && r.useDate>=from && r.useDate<to);
+      const done=rs.filter(r=>r.status==="COMPLETED").length;
+      const occ=Math.min(1, done/(28*2));
+      const rv=pub.filter(v=>v.branchId===b.id);
+      const rAvg=rv.length? rv.reduce((a,v)=>a+v.rating,0)/rv.length : 3.8;
+      const ph={};
+      reservations.forEach(r=>{ if(r.branchId===b.id&&r.status==="COMPLETED"&&r.phone)
+        ph[r.phone]=(ph[r.phone]||0)+1; });
+      const cust=Object.values(ph);
+      const re=cust.length? cust.filter(c=>c>=2).length/cust.length : 0;
+      const claims=incidents.filter(i=>i.branchId===b.id&&i.state==="CONFIRMED").length
+                 + rs.filter(r=>r.status==="NO_SHOW").length*0.5;
+      const clean=Math.max(0, 1-claims*0.25);
+      const score=Math.round(occ*40 + (rAvg/5)*30 + re*15 + clean*15);
+      return { b, score, occ, rAvg, re, claims, done };
+    }).sort((a,c)=>a.score-c.score);
+  }
+
+  /* 북극성 — 월 무사고 완료 슬롯 (입실 실패 · 중대 분쟁 건 제외) */
+  function northStar(){
+    const mk=`${TODAY.getFullYear()}-${TODAY.getMonth()}`;
+    const inM=r=>`${r.useDate.getFullYear()}-${r.useDate.getMonth()}`===mk;
+    const doneM=reservations.filter(r=>r.status==="COMPLETED"&&inM(r));
+    const clean=doneM.filter(r=>!incidents.some(i=>i.resId===r.id&&i.state==="CONFIRMED")).length;
+    const cap=branches.length*2*TODAY.getDate();
+    return { clean, done:doneM.length, cap, rate:cap? clean/cap:0 };
+  }
+
+  /* 창업 문의 파이프라인 (franchise_leads) */
+  const FR_STAGES=["접수","상담","실사","계약"];
+  const leads=[
+    { id:"F001", at:addDays(TODAY,-2),  name:"신희상", phone:"010-3141-5926", region:"경기", memo:"과천 문원동 228-2 자가 건물 — 워크샵하우스 콘셉트 제안 중", stage:"상담", up:0 },
+    { id:"F002", at:addDays(TODAY,-5),  name:"박경호", phone:"010-2718-2818", region:"부산", memo:"서면 상가 2층 40평 · 예산 8천", stage:"접수", up:0 },
+    { id:"F003", at:addDays(TODAY,-9),  name:"이수민", phone:"010-1414-2135", region:"서울", memo:"홍대 인근 · 기존 스터디카페 전환 검토", stage:"상담", up:0 },
+    { id:"F004", at:addDays(TODAY,-14), name:"정태윤", phone:"010-1732-0508", region:"대전", memo:"둔산동 · 실사 일정 조율", stage:"실사", up:0 },
+    { id:"F005", at:addDays(TODAY,-21), name:"최은지", phone:"010-2236-0679", region:"서울", memo:"강동 · 조건 협의 마무리", stage:"계약", up:0 },
+    { id:"F006", at:addDays(TODAY,-1),  name:"한도현", phone:"010-1123-5813", region:"인천", memo:"송도 · 자료 요청", stage:"접수", up:0 },
+    { id:"F007", at:addDays(TODAY,-11), name:"오세라", phone:"010-3162-2777", region:"경기", memo:"수원 인계동 3호점 관심", stage:"상담", up:0 }
+  ];
+  function frAdd(o){
+    if(!o.name||!o.phone) return { ok:false, reason:"이름과 연락처는 필수입니다" };
+    const L={ id:"F"+String(100+leads.length+1), at:new Date(), name:o.name, phone:o.phone,
+      region:o.region||"", memo:o.memo||"", stage:"접수", up:Date.now() };
+    leads.unshift(L);
+    logEvent("FranchiseLeadAdded","",`${L.name} · ${L.region||"지역 미정"}`);
+    logAudit("창업", L.id, "문의 접수 — "+L.name);
+    return { ok:true, lead:L };
+  }
+  function frAdvance(id){
+    const L=leads.find(x=>x.id===id); if(!L) return { ok:false };
+    const i=FR_STAGES.indexOf(L.stage);
+    if(i>=FR_STAGES.length-1) return { ok:false, reason:"이미 계약 단계입니다" };
+    L.stage=FR_STAGES[i+1]; L.up=Date.now();
+    logEvent("FranchiseLeadAdvanced","",`${L.name} → ${L.stage}`);
+    logAudit("창업", L.id, "단계 이동 — "+L.stage);
+    return { ok:true, stage:L.stage };
+  }
+  /* 수익 시뮬레이터 — 실거래 90일 기반 (8.3 데이터 자산화) */
+  function frSim(region){
+    const bs=branches.filter(b=>!region||b.region===region);
+    const from=addDays(TODAY,-90);
+    const per=bs.map(b=>{
+      const rs=reservations.filter(r=>r.branchId===b.id&&r.status==="COMPLETED"&&r.useDate>=from);
+      return { name:b.shortName||b.name,
+        mon: rs.reduce((a,r)=>a+r.amount,0)/3,
+        occ: Math.min(1, rs.length/(90*2)) };
+    }).sort((a,c)=>c.mon-a.mon);
+    const n=per.length||1;
+    return { region: region||"전국", n:per.length,
+      avgMon: per.reduce((a,x)=>a+x.mon,0)/n,
+      topMon: per.length? per[0].mon:0, topName: per.length? per[0].name:"",
+      occAvg: per.reduce((a,x)=>a+x.occ,0)/n };
+  }
+
+  /* ── 회원 인덱스 — 예약 원장에서 파생 (별도 저장 없음) ── */
+  function gradeOf(doneCnt){
+    const c=settings.point;
+    if(doneCnt>=c.vipCount)  return { key:"VIP",  label:"VIP",   rate:c.vipRate };
+    if(doneCnt>=c.plusCount) return { key:"PLUS", label:"플러스", rate:c.plusRate };
+    return { key:"BASIC", label:"베이직", rate:c.rate };
+  }
+  function memberIndex(){
+    const map={};
+    reservations.forEach(r=>{
+      if(!r.phone) return;
+      const k=String(r.phone).replace(/\D/g,""); if(k.length<9) return;
+      const m=(map[k] ||= { phone:r.phone, name:r.name, resCnt:0, doneCnt:0,
+        noshowCnt:0, cxlCnt:0, sales:0, first:r.useDate, last:r.useDate });
+      m.resCnt++; m.name=r.name;
+      if(r.status==="COMPLETED"){ m.doneCnt++; m.sales+=r.amount; }
+      if(r.status==="NO_SHOW") m.noshowCnt++;
+      if(r.status==="CANCELLED") m.cxlCnt++;
+      if(r.useDate<m.first) m.first=r.useDate;
+      if(r.useDate>m.last)  m.last=r.useDate;
+    });
+    return Object.values(map);
+  }
+
+  return { NOW, TODAY, wdIdx, WD_LABEL, SITE,
+           events, ledger, reconQueue,
+           logEvent, addLedger, ledgerOf, ledgerSum, addRecon, resolveRecon,
+           setStatus, effStatus, makeQuote,
+           incidents, addIncident, disputeIncident, confirmDeduct, withdrawIncident,
+           incidentsOf, depositStateOf, isFlagged, flaggedList,
+           reviews, reviewReply, reviewSetState,
+           inquiries, inquiryTake, inquiryClose,
+           partners, packages, orders, pkgPrice, orderSetState, addOrder, partnerToggle, attachStats,
+           points, pointsOf, pointBalance, addPoints,
+           gradeOf, memberIndex,
+           batches, buildImportTemplate, stageBatch, dryRunBatch, applyBatch, rollbackBatch, buildExport,
+           slotLocks, isLockedSlot, unlockSlot, runTriggers, reportPayMismatch, requestAccountChange, payHold,
+           taskAssign, assignTask, taskQueue, anomalies,
+           branchHealth, northStar, FR_STAGES, leads, frAdd, frAdvance, frSim, addDays, keyOf, dayMs,
     branches, branchById, reservations, links, conflictLog,
     membersDaily, statsDaily, heat, heatDen, occRate,
     revisit, settlement, pendingChanges, notifFails, chatbotOpen, extRegs,
@@ -1228,29 +2155,34 @@ SP.auth = (() => {
 
 /* ===== persist.js ===== */
 /* ============================================================
-   SSOPLE Dashboard — persist.js
-   변경분(수기·가져오기 예약, 상태 변경, 지점 편집, 수수료율, 노트)을
-   이 브라우저에 저장한다. 배포된 사이트에서는 새로고침해도 유지되고,
-   저장이 막힌 환경(미리보기)에서는 세션 동안만 유지된다.
-   여러 사람이 같은 데이터를 보는 건 D1 연동 단계에서 해결한다.
+   SSOPLE Dashboard — persist.js v2
+   저장 우선순위: D1 공유(/api/dash-sync) → 이 브라우저 → 세션.
+   D1 모드에서는 변경분을 행 단위로 올리고 15초마다 다른 직원의
+   변경을 받아온다. 같은 항목을 동시에 고치면 마지막 저장이 이긴다.
    ============================================================ */
 SP.persist = (() => {
   const D = SP.data;
   const KEY = "ssople-dash-v1";
-  let mem = null, mode = "memory";
-  try { localStorage.setItem("__ss_t","1"); localStorage.removeItem("__ss_t"); mode = "local"; } catch(e){}
+  const API = "/api/dash-sync";
+  let mode = "memory";                     // remote | local | memory
+  let mem = null, since = 0, pushing = false, timer = null;
 
-  const addedIds = new Set();      // 수기 · 가져오기로 새로 만든 예약
-  const touched  = new Set();      // 상태가 바뀐 기존 예약
-  const branchEd = new Set();      // 편집된 지점 코드
+  let lsOK = false;
+  try { localStorage.setItem("__ss_t","1"); localStorage.removeItem("__ss_t"); lsOK = true; } catch(e){}
+
+  const addedIds = new Set();
+  const touched  = new Set();
+  const branchEd = new Set();
+  const dirty = { added:new Set(), patch:new Set(), branch:new Set() };
   const seedNotes = D.notices.length;
 
   const dN = v => v instanceof Date ? +v : v;
   const hD = v => (typeof v === "number" && v > 10000000) ? new Date(v) : v;
-  const DATE_F = ["useDate","createdAt","cancelAt","noshowAt","linkAt"];
+  const DATE_F  = ["useDate","createdAt","cancelAt","noshowAt","linkAt"];
   const PATCH_F = ["status","checkin","noshowAt","cancelAt","cancelReason","refund",
                    "pay","amountDue","memo","intIssue","ownIssue","chClosed","linkAt"];
 
+  /* ── 직렬화 ── */
   function dehydRes(r){
     const c = {...r};
     DATE_F.forEach(k => { if (c[k]) c[k] = dN(c[k]); });
@@ -1267,121 +2199,309 @@ SP.persist = (() => {
     r.audit = (o.audit||[]).map(a => ({...a, at: hD(a.at)}));
     return r;
   }
-
-  function snapshot(){
-    const added = [];
-    addedIds.forEach(id => { const r = D.reservations.find(x=>x.id===id); if (r) added.push(dehydRes(r)); });
-
-    const patch = {};
-    touched.forEach(id => {
-      if (addedIds.has(id)) return;
-      const r = D.reservations.find(x=>x.id===id); if (!r) return;
-      const p = {};
-      PATCH_F.forEach(k => {
-        if (k==="refund") p.refund = r.refund ? {...r.refund, at: dN(r.refund.at)} : null;
-        else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") p[k] = r[k] ? dN(r[k]) : null;
-        else p[k] = r[k];
-      });
-      p.memos = (r.memos||[]).map(m => ({...m, at: dN(m.at)}));
-      p.audit = (r.audit||[]).slice(-12).map(a => ({...a, at: dN(a.at)}));
-      patch[id] = p;
+  function patchOf(r){
+    const p = {};
+    PATCH_F.forEach(k => {
+      if (k === "refund") p.refund = r.refund ? {...r.refund, at: dN(r.refund.at)} : null;
+      else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") p[k] = r[k] ? dN(r[k]) : null;
+      else p[k] = r[k];
     });
-
-    const branch = {};
-    branchEd.forEach(code => {
-      const b = D.branches.find(x=>x.code===code); if (!b) return;
-      const room = b.rooms[0];
-      branch[code] = { photo: room.photo||"", desc: room.desc, active: room.active!==false, hue: room.hue,
-        priceDay: b.priceDay.slice(), priceNight: b.priceNight.slice(),
-        pkgs: b.pkgs.map(p => ({k:p.k, p:p.p.slice(), url:p.url})) };
-    });
-
-    const notesExtra = D.notices.slice(0, Math.max(0, D.notices.length - seedNotes))
+    p.memos = (r.memos||[]).map(m => ({...m, at: dN(m.at)}));
+    p.audit = (r.audit||[]).slice(-12).map(a => ({...a, at: dN(a.at)}));
+    return p;
+  }
+  function branchOf(code){
+    const b = D.branches.find(x => x.code === code); if (!b) return null;
+    const room = b.rooms[0];
+    return { photo: room.photo||"", desc: room.desc, active: room.active!==false, hue: room.hue,
+      priceDay: b.priceDay.slice(), priceNight: b.priceNight.slice(),
+      pkgs: b.pkgs.map(p => ({k:p.k, p:p.p.slice(), url:p.url})) };
+  }
+  function mergeById(dst, inc, cap){
+    const seen=new Set(dst.map(x=>x.id));
+    (inc||[]).forEach(x=>{ if(x && x.id && !seen.has(x.id)){ dst.push({...x, at:hD(x.at)}); seen.add(x.id); } });
+    dst.sort((a,b)=> (b.at&&a.at? b.at-a.at : 0));
+    if (cap && dst.length>cap) dst.length=cap;
+  }
+  function kvAll(){
+    const notes = D.notices.slice(0, Math.max(0, D.notices.length - seedNotes))
       .map(n => ({...n, at: dN(n.at), reads: {...n.reads}}));
     const reads = {};
     D.notices.forEach(n => { if (Object.keys(n.reads).length) reads[n.id] = {...n.reads}; });
-
-    return { v:1, at: Date.now(), added, patch, branch,
-      settings: { feeRate: D.settings.feeRate },
-      hostAdj: D.hostAdj, notes: notesExtra, reads };
+    const dSer=a=>a.map(x=>({...x, at:dN(x.at), resolvedAt:x.resolvedAt?dN(x.resolvedAt):undefined}));
+    return { settings:JSON.parse(JSON.stringify(D.settings)), hostAdj:D.hostAdj, notes, reads,
+      batches:D.batches.slice(0,20).map(b=>({ id:b.id, at:dN(b.at), by:b.by, src:b.src,
+        state:b.state, up:b.up, appliedIds:b.appliedIds,
+        rows: b.state==="STAGED"? b.rows.slice(0,300):[], idx:b.idx,
+        report: b.report? { at:dN(b.report.at), okN:b.report.okN, dupN:b.report.dupN,
+          errN:b.report.errN, verdicts: b.state==="STAGED"? b.report.verdicts.slice(0,300):[] } : null })),
+      slotLocks:D.slotLocks.map(l=>({...l, at:dN(l.at)})),
+      taskAssign:{...D.taskAssign},
+      payHold:{...D.payHold},
+      reviews:D.reviews.filter(v=>v.up).map(v=>({...v, at:dN(v.at), replyAt:v.replyAt?dN(v.replyAt):null})),
+      inquiries:D.inquiries.filter(q=>q.up).map(q=>({...q, at:dN(q.at), closedAt:q.closedAt?dN(q.closedAt):undefined})),
+      orders:D.orders.filter(o=>o.up).map(o=>({...o, at:dN(o.at)})),
+      partners:D.partners.filter(x=>x.up).map(x=>({...x})),
+      leads:D.leads.slice(0,60).map(L=>({...L, at:dN(L.at)})),
+      points:D.points.slice(0,300).map(t=>({...t, at:dN(t.at)})),
+      incidents:D.incidents.slice(0,200).map(x=>({...x, at:dN(x.at),
+        disputeUntil:dN(x.disputeUntil),
+        disputedAt:x.disputedAt?dN(x.disputedAt):undefined,
+        confirmedAt:x.confirmedAt?dN(x.confirmedAt):undefined,
+        withdrawnAt:x.withdrawnAt?dN(x.withdrawnAt):undefined})),
+      events:dSer(D.events.slice(0,250)), ledger:dSer(D.ledger.slice(0,400)),
+      recon:dSer(D.reconQueue.slice(0,120)) };
   }
 
-  let timer = null;
-  function save(){
+  /* ── 적용 (서버 · 브라우저 공용) ── */
+  function applyBranch(code, e, register){
+    const b = D.branches.find(x => x.code === code); if (!b || !e) return;
+    const room = b.rooms[0];
+    room.photo = e.photo||""; if (e.desc) room.desc = e.desc;
+    room.active = e.active !== false; if (e.hue) room.hue = e.hue;
+    (e.priceDay||[]).forEach((v,i)=>{ if(v!=null) b.priceDay[i]=v; });
+    (e.priceNight||[]).forEach((v,i)=>{ if(v!=null) b.priceNight[i]=v; });
+    room.priceDay = b.priceDay[0]; room.priceNight = b.priceNight[0];
+    (e.pkgs||[]).forEach(pe => { const p = b.pkgs.find(x=>x.k===pe.k);
+      if (p){ (pe.p||[]).forEach((v,i)=>p.p[i]=v); p.url = pe.url; } });
+    if (register) branchEd.add(code);
+  }
+  function applyAdded(o, register){
+    const i = D.reservations.findIndex(x => x.id === o.id);
+    const r = hydRes(o);
+    if (i >= 0) D.reservations[i] = r; else D.reservations.unshift(r);
+    if (register) addedIds.add(o.id);
+  }
+  function applyPatch(id, p, register){
+    const r = D.reservations.find(x => x.id === id); if (!r || !p) return;
+    PATCH_F.forEach(k => {
+      if (!(k in p)) return;
+      if (k === "refund") r.refund = p.refund ? {...p.refund, at: hD(p.refund.at)} : null;
+      else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") r[k] = p[k] ? hD(p[k]) : null;
+      else r[k] = p[k];
+    });
+    if (p.memos) r.memos = p.memos.map(m => ({...m, at: hD(m.at)}));
+    if (p.audit) r.audit = p.audit.map(a => ({...a, at: hD(a.at)}));
+    if (register) touched.add(id);
+  }
+  function applyKv(k, v){
+    if (!v) return;
+    if (k === "settings" && v && typeof v==="object"){
+      if (typeof v.feeRate==="number") D.settings.feeRate=v.feeRate;
+      ["deposit","refundFullDays","disputeDays","inspectHours"].forEach(kk=>{
+        if(typeof v[kk]==="number") D.settings[kk]=v[kk]; });
+      if (v.deduct) Object.entries(v.deduct).forEach(([kk,vv])=>{
+        if(D.settings.deduct[kk]) Object.assign(D.settings.deduct[kk], vv); });
+      if (v.point) Object.assign(D.settings.point, v.point);
+      if (v.anomaly) Object.assign(D.settings.anomaly, v.anomaly);
+    }
+    if (k === "hostAdj") Object.entries(v).forEach(([kk,vv]) => D.hostAdj[kk]=vv);
+    if (k === "notes") (v||[]).slice().reverse().forEach(n => {
+      if (!D.notices.some(x => x.id === n.id)) D.notices.unshift({...n, at: hD(n.at)});
+    });
+    if (k === "reads") Object.entries(v).forEach(([id,m]) => {
+      const n = D.notices.find(x => x.id === id); if (n) Object.assign(n.reads, m);
+    });
+    if (k === "batches") (v||[]).forEach(iv=>{
+      const loc=D.batches.find(x=>x.id===iv.id);
+      if(!loc) D.batches.push({...iv, at:hD(iv.at),
+        report: iv.report? {...iv.report, at:hD(iv.report.at)}:null});
+      else if((iv.up||0)>(loc.up||0)){
+        loc.state=iv.state; loc.appliedIds=iv.appliedIds||loc.appliedIds; loc.up=iv.up;
+        if(iv.report) loc.report={...iv.report, at:hD(iv.report.at),
+          verdicts: iv.report.verdicts&&iv.report.verdicts.length? iv.report.verdicts : (loc.report?loc.report.verdicts:[])};
+      }
+    });
+    if (k === "slotLocks") mergeById(D.slotLocks, v, 60);
+    if (k === "taskAssign") Object.entries(v||{}).forEach(([kk,vv])=>{
+      const cur=D.taskAssign[kk];
+      if(!cur || (vv.at||0)>(cur.at||0)) D.taskAssign[kk]=vv;
+    });
+    if (k === "payHold") Object.assign(D.payHold, v||{});
+    if (k === "reviews") (v||[]).forEach(iv=>{
+      const loc=D.reviews.find(x=>x.id===iv.id);
+      if(loc && (iv.up||0)>(loc.up||0))
+        Object.assign(loc,{reply:iv.reply, replyBy:iv.replyBy,
+          replyAt:iv.replyAt?hD(iv.replyAt):null, state:iv.state, up:iv.up});
+    });
+    if (k === "inquiries") (v||[]).forEach(iv=>{
+      const loc=D.inquiries.find(x=>x.id===iv.id);
+      if(loc && (iv.up||0)>(loc.up||0))
+        Object.assign(loc,{state:iv.state, assignee:iv.assignee, answer:iv.answer,
+          closedAt:iv.closedAt?hD(iv.closedAt):loc.closedAt, up:iv.up});
+    });
+    if (k === "orders") (v||[]).forEach(iv=>{
+      const loc=D.orders.find(x=>x.id===iv.id);
+      if(loc){ if((iv.up||0)>(loc.up||0)) Object.assign(loc,{state:iv.state, up:iv.up}); }
+      else D.orders.unshift({...iv, at:hD(iv.at)});
+    });
+    if (k === "partners") (v||[]).forEach(iv=>{
+      const loc=D.partners.find(x=>x.id===iv.id);
+      if(loc && (iv.up||0)>(loc.up||0)) Object.assign(loc,{state:iv.state, fee:iv.fee, up:iv.up});
+    });
+    if (k === "leads") (v||[]).forEach(iv=>{
+      const loc=D.leads.find(x=>x.id===iv.id);
+      if(!loc) D.leads.unshift({...iv, at:hD(iv.at)});
+      else if((iv.up||0)>(loc.up||0)) Object.assign(loc,{stage:iv.stage, memo:iv.memo, up:iv.up});
+    });
+    if (k === "points") mergeById(D.points, (v||[]).map(x=>({...x})), 400);
+    if (k === "incidents"){
+      const RANK={PROPOSED:1,DISPUTED:2,WITHDRAWN:3,CONFIRMED:3};
+      mergeById(D.incidents, (v||[]).map(x=>({...x,
+        disputeUntil:hD(x.disputeUntil), disputedAt:x.disputedAt?hD(x.disputedAt):undefined,
+        confirmedAt:x.confirmedAt?hD(x.confirmedAt):undefined,
+        withdrawnAt:x.withdrawnAt?hD(x.withdrawnAt):undefined})), 200);
+      (v||[]).forEach(iv=>{ const ic=D.incidents.find(x=>x.id===iv.id);
+        if(ic && RANK[iv.state]>RANK[ic.state]){
+          Object.assign(ic,{state:iv.state,
+            disputedAt:iv.disputedAt?hD(iv.disputedAt):ic.disputedAt,
+            confirmedAt:iv.confirmedAt?hD(iv.confirmedAt):ic.confirmedAt, confirmedBy:iv.confirmedBy,
+            withdrawnAt:iv.withdrawnAt?hD(iv.withdrawnAt):ic.withdrawnAt}); } });
+    }
+    if (k === "events") mergeById(D.events, v, 400);
+    if (k === "ledger") mergeById(D.ledger, v, 600);
+    if (k === "recon"){
+      mergeById(D.reconQueue, v, 200);
+      (v||[]).forEach(iv=>{ const q=D.reconQueue.find(x=>x.id===iv.id);
+        if(q && iv.state==="RESOLVED" && q.state!=="RESOLVED"){
+          q.state="RESOLVED"; q.resolvedAt=hD(iv.resolvedAt); q.resolvedBy=iv.resolvedBy; q.resolveMemo=iv.resolveMemo; } });
+    }
+  }
+
+  /* ── 브라우저 저장 (원격 실패 시) ── */
+  function lsSnapshot(){
+    const added = []; addedIds.forEach(id => {
+      const r = D.reservations.find(x=>x.id===id); if (r) added.push(dehydRes(r)); });
+    const patch = {}; touched.forEach(id => {
+      if (addedIds.has(id)) return;
+      const r = D.reservations.find(x=>x.id===id); if (r) patch[id] = patchOf(r); });
+    const branch = {}; branchEd.forEach(c => { const e = branchOf(c); if (e) branch[c] = e; });
+    return { v:1, at:Date.now(), added, patch, branch, ...kvAll() };
+  }
+  function lsSave(){
     try {
-      const s = JSON.stringify(snapshot());
-      if (mode==="local") localStorage.setItem(KEY, s); else mem = s;
-    } catch(e) { /* 용량 초과 등 — 조용히 넘어간다 */ }
+      const s = JSON.stringify(lsSnapshot());
+      if (lsOK) localStorage.setItem(KEY, s); else mem = s;
+    } catch(e){}
   }
-  function ping(){ clearTimeout(timer); timer = setTimeout(save, 300); }
-
-  function load(){
+  function lsLoad(){
     let s = null;
-    try { s = mode==="local" ? localStorage.getItem(KEY) : mem; } catch(e){}
+    try { s = lsOK ? localStorage.getItem(KEY) : mem; } catch(e){}
     if (!s) return;
-    let o; try { o = JSON.parse(s); } catch(e) { return; }
-
-    Object.entries(o.branch||{}).forEach(([code,e]) => {
-      const b = D.branches.find(x=>x.code===code); if (!b) return;
-      const room = b.rooms[0];
-      room.photo = e.photo||""; if (e.desc) room.desc = e.desc;
-      room.active = e.active!==false; if (e.hue) room.hue = e.hue;
-      (e.priceDay||[]).forEach((v,i)=>{ if(v!=null) b.priceDay[i]=v; });
-      (e.priceNight||[]).forEach((v,i)=>{ if(v!=null) b.priceNight[i]=v; });
-      room.priceDay = b.priceDay[0]; room.priceNight = b.priceNight[0];
-      (e.pkgs||[]).forEach(pe => { const p = b.pkgs.find(x=>x.k===pe.k);
-        if (p){ (pe.p||[]).forEach((v,i)=>p.p[i]=v); p.url = pe.url; } });
-      branchEd.add(code);
-    });
-
-    (o.added||[]).forEach(a => {
-      if (D.reservations.some(x=>x.id===a.id)) return;
-      D.reservations.unshift(hydRes(a)); addedIds.add(a.id);
-    });
-
-    Object.entries(o.patch||{}).forEach(([id,p]) => {
-      const r = D.reservations.find(x=>x.id===id); if (!r) return;
-      PATCH_F.forEach(k => {
-        if (!(k in p)) return;
-        if (k==="refund") r.refund = p.refund ? {...p.refund, at: hD(p.refund.at)} : null;
-        else if (k==="noshowAt"||k==="cancelAt"||k==="linkAt") r[k] = p[k] ? hD(p[k]) : null;
-        else r[k] = p[k];
-      });
-      if (p.memos) r.memos = p.memos.map(m => ({...m, at: hD(m.at)}));
-      if (p.audit) r.audit = p.audit.map(a => ({...a, at: hD(a.at)}));
-      touched.add(id);
-    });
-
-    if (o.settings && typeof o.settings.feeRate === "number") D.settings.feeRate = o.settings.feeRate;
-    Object.entries(o.hostAdj||{}).forEach(([k,v]) => D.hostAdj[k]=v);
-    (o.notes||[]).slice().reverse().forEach(n => {
-      if (D.notices.some(x=>x.id===n.id)) return;
-      D.notices.unshift({...n, at: hD(n.at)});
-    });
-    Object.entries(o.reads||{}).forEach(([id,m]) => {
-      const n = D.notices.find(x=>x.id===id); if (n) Object.assign(n.reads, m);
-    });
+    let o; try { o = JSON.parse(s); } catch(e){ return; }
+    Object.entries(o.branch||{}).forEach(([c,e]) => applyBranch(c, e, true));
+    (o.added||[]).forEach(a => applyAdded(a, true));
+    Object.entries(o.patch||{}).forEach(([id,p]) => applyPatch(id, p, true));
+    applyKv("settings", o.settings); applyKv("hostAdj", o.hostAdj);
+    applyKv("notes", o.notes); applyKv("reads", o.reads);
     D.occInvalidate();
   }
 
-  /* 거의 모든 변경이 logAudit을 지나간다 — 여기서 저장을 건다 */
+  /* ── D1 공유 ── */
+  const canFetch = () => typeof fetch === "function";
+  async function remoteBoot(){
+    if (!canFetch()) return false;
+    try {
+      let signal;
+      try { const c = new AbortController(); setTimeout(()=>c.abort(), 3500); signal = c.signal; } catch(e){}
+      const res = await fetch(API, { signal, headers:{accept:"application/json"} });
+      if (!res || !res.ok) return false;
+      const j = await res.json();
+      if (!j || j.ok !== true) return false;
+      (j.branch||[]).forEach(r => { try{ applyBranch(r.k, JSON.parse(r.v), true); }catch(e){} });
+      (j.added ||[]).forEach(r => { try{ applyAdded(JSON.parse(r.v), true); }catch(e){} });
+      (j.patch ||[]).forEach(r => { try{ applyPatch(r.k, JSON.parse(r.v), true); }catch(e){} });
+      (j.kv    ||[]).forEach(r => { try{ applyKv(r.k, JSON.parse(r.v)); }catch(e){} });
+      since = j.now || Date.now();
+      D.occInvalidate();
+      mode = "remote";
+      setInterval(poll, 15000);
+      return true;
+    } catch(e){ return false; }
+  }
+  async function poll(){
+    if (mode !== "remote" || pushing || !canFetch()) return;
+    try {
+      const res = await fetch(API + "?since=" + since);
+      if (!res || !res.ok) return;
+      const j = await res.json(); if (!j || !j.ok) return;
+      let changed = 0;
+      (j.branch||[]).forEach(r => { if (dirty.branch.has(r.k)) return;
+        try{ applyBranch(r.k, JSON.parse(r.v), true); changed++; }catch(e){} });
+      (j.added ||[]).forEach(r => { if (dirty.added.has(r.k)) return;
+        try{ applyAdded(JSON.parse(r.v), true); changed++; }catch(e){} });
+      (j.patch ||[]).forEach(r => { if (dirty.patch.has(r.k)) return;
+        try{ applyPatch(r.k, JSON.parse(r.v), true); changed++; }catch(e){} });
+      (j.kv    ||[]).forEach(r => { try{ applyKv(r.k, JSON.parse(r.v)); }catch(e){} });
+      since = j.now || since;
+      if (changed){
+        D.occInvalidate();
+        if (D.runTriggers) D.runTriggers();
+        if (SP.app && !document.querySelector(".modal-back") && !document.querySelector(".drawer"))
+          SP.app.render();
+      }
+    } catch(e){}
+  }
+  async function push(){
+    if (pushing || !canFetch()) return;
+    pushing = true;
+    try {
+      const body = { by:(SP.auth && SP.auth.user && SP.auth.user.name) || "",
+        added:{}, patch:{}, branch:{}, kv:{} };
+      dirty.added.forEach(id => { const r = D.reservations.find(x=>x.id===id);
+        if (r) body.added[id] = JSON.stringify(dehydRes(r)); });
+      dirty.patch.forEach(id => { const r = D.reservations.find(x=>x.id===id);
+        if (r) body.patch[id] = JSON.stringify(patchOf(r)); });
+      dirty.branch.forEach(c => { const e = branchOf(c); if (e) body.branch[c] = JSON.stringify(e); });
+      const kv = kvAll();
+      Object.keys(kv).forEach(k => body.kv[k] = JSON.stringify(kv[k]));
+      const res = await fetch(API, { method:"PUT",
+        headers:{ "content-type":"application/json" }, body: JSON.stringify(body) });
+      if (res && res.ok){
+        const j = await res.json();
+        if (j && j.ok){ dirty.added.clear(); dirty.patch.clear(); dirty.branch.clear();
+          since = j.now || since; }
+      }
+    } catch(e){}
+    pushing = false;
+  }
+
+  function flush(){ if (mode === "remote") return push(); lsSave(); return Promise.resolve(); }
+  function ping(){ clearTimeout(timer); timer = setTimeout(flush, 400); }
+
+  /* 대부분의 변경은 logAudit · addNote를 지나간다 */
   const _la = D.logAudit;
   D.logAudit = function(){ _la.apply(null, arguments); ping(); };
   const _an = D.addNote;
   D.addNote = function(o){ const n = _an(o); ping(); return n; };
 
   function reset(){
-    try { if (mode==="local") localStorage.removeItem(KEY); } catch(e){}
-    mem = null; addedIds.clear(); touched.clear(); branchEd.clear();
+    try { if (lsOK) localStorage.removeItem(KEY); } catch(e){}
+    mem = null;
+    if (mode !== "remote"){ addedIds.clear(); touched.clear(); branchEd.clear(); }
   }
 
-  load();
+  /* 부팅: 서버 먼저, 안 되면 브라우저 저장 */
+  let _ready;
+  const ready = new Promise(r => { _ready = r; });
+  (async () => {
+    const ok = await remoteBoot();
+    if (!ok){ mode = lsOK ? "local" : "memory"; lsLoad(); }
+    _ready();
+  })();
 
-  return { mode, ping, save, reset,
-    addRes: id => { addedIds.add(id); ping(); },
-    touch:  r  => { touched.add(r.id); ping(); },
-    branch: code => { branchEd.add(code); ping(); },
-    _debug: () => ({ added:[...addedIds], touched:touched.size, branch:[...branchEd] }) };
+  return {
+    get mode(){ return mode; },
+    ready, ping, reset,
+    save: flush,
+    addRes: id => { addedIds.add(id); dirty.added.add(id); ping(); },
+    touch:  r  => { if (addedIds.has(r.id)) dirty.added.add(r.id);
+                    else { touched.add(r.id); dirty.patch.add(r.id); } ping(); },
+    branch: c  => { branchEd.add(c); dirty.branch.add(c); ping(); },
+    _poll: poll, _push: push,
+    _debug: () => ({ mode, added:[...addedIds], touched:touched.size,
+                     branch:[...branchEd], dirty:{a:dirty.added.size,p:dirty.patch.size,b:dirty.branch.size} })
+  };
 })();
 
 
@@ -1929,6 +3049,57 @@ SP.screens = SP.screens || {};
       el("span",{class:"r-cap"},"매일 아침 10분 — 이 순서대로")
     );
 
+    /* 북극성 (11.1) — 월 무사고 완료 슬롯 */
+    const ns=D.northStar();
+    const anoms=D.anomalies();
+    root.appendChild(el("div",{class:"ns-band"},
+      el("div",{class:"ns-main"},
+        el("span",{class:"ns-cap"},"북극성 · 이번 달 무사고 완료 슬롯"),
+        el("strong",{class:"ns-val num"}, R.fmtNum(ns.clean)),
+        el("span",{class:"ns-sub num"},
+          `완료 ${R.fmtNum(ns.done)} 중 분쟁 제외 · 가동률 ${R.fmtPct(ns.rate,1)} (슬롯 ${R.fmtNum(ns.cap)})`)),
+      el("span",{class:"ns-note"},"채웠는가보다 제대로 끝냈는가 — 매출이 아니라 이 숫자를 봅니다 (11장)")));
+    if(anoms.length){
+      const ab=el("div",{class:"anom-band"});
+      anoms.slice(0,3).forEach(x=>ab.append(el("span",{class:"anom-chip"+(x.sev>=2?" hot":"")},
+        `⚠ ${x.kind} — ${x.detail}`)));
+      ab.append(el("button",{class:"btn tiny ghost", onclick:()=>{SP.app.go("msg");}},"대기함에서 처리"));
+      root.appendChild(ab);
+    }
+
+    /* 오늘의 숫자 — BM 9.2 Daily */
+    const today0=D.TODAY, today1=D.addDays(D.TODAY,1);
+    const inToday=d=>d>=today0&&d<today1;
+    const newToday=D.reservations.filter(r=>r.createdAt&&inToday(r.createdAt)).length;
+    const cxlToday=D.reservations.filter(r=>r.cancelAt&&inToday(r.cancelAt)).length;
+    const activeB=D.branches.filter(b=>b.rooms[0].active!==false).length;
+    const ordOn=D.orders.filter(o=>["신규","수락"].includes(o.state)).length;
+    const ordLate=D.orders.filter(o=>o.state==="지연").length;
+    const inqWait=D.inquiries.filter(q=>q.state!=="완료").length;
+    const icOn=D.incidents.filter(i=>["PROPOSED","DISPUTED"].includes(i.state)).length;
+    const qN=D.taskQueue().length;
+    const lowRv=D.reviews.filter(v=>v.state==="게시"&&v.rating<=2&&v.at>=D.addDays(D.TODAY,-14)).length;
+    const inspect=D.reservations.filter(r=>r.status==="COMPLETED"&&D.depositStateOf(r)==="INSPECTION_PENDING").length;
+    const daily=[
+      ["수요",   `오늘 신규 등록 ${newToday}건`, "수기 · 채널 반입 포함"],
+      ["거래",   `오늘 매출 ${perm("viewMoney")? R.fmtWon(kp.todaySales):"—"} · 취소 ${cxlToday}건`, "승인 − 환불"],
+      ["공급",   `판매 중 ${activeB}/${D.branches.length}개 지점 · 긴급 잠금 ${D.slotLocks.length}`, "일시 중지 · 잠금 제외"],
+      ["커머스", `진행 주문 ${ordOn}건 · 지연 ${ordLate}건`, `부착률 ${R.fmtPct(D.attachStats().rate,1)}`],
+      ["CS · Trust", `미처리 문의 ${inqWait} · 분쟁 진행 ${icOn} · 대기함 ${qN}`, "24시간이 기준선"],
+      ["품질",   `최근 저평점 ${lowRv}건 · 검수 대기 ${inspect}건`, "★2 이하 · 퇴실 24시간 내"]
+    ];
+    root.appendChild(U.card("", U.secHead("오늘의 숫자","매일 보여야 할 것만 — 자세한 건 각 화면에서 (Control Tower 9.2)"),
+      el("div",{class:"daily-grid"}, daily.map(([k,v,n])=>el("div",{class:"daily-cell"},
+        el("span",{class:"d-k"},k), el("b",{class:"d-v"},v), el("small",{class:"sub"},n))))));
+
+    /* 관리 우선 지점 — 건강도 하위 3 */
+    const worst=D.branchHealth().slice(0,3);
+    root.appendChild(el("div",{class:"worst-band"},
+      el("span",{class:"sub"},"관리 우선 지점(건강도 하위)"),
+      worst.map(h=>el("button",{class:"chip f", onclick:()=>SP.app.go("stats",{tab:"space"})},
+        `${h.b.shortName||h.b.name} ${h.score}점`)),
+      el("span",{class:"sub", style:"margin-left:auto"},"산식 — 가동 40 · 리뷰 30 · 재예약 15 · 무클레임 15 (8.3)")));
+
     /* KPI 6종 */
     const kpiRow = el("div",{class:"kpi-grid",id:"kpi"},
       U.kpi({label:"오늘 예약", value:R.fmtNum(kp.todayRes)+"건", sub:"이용일 = 오늘 · 확정+완료",
@@ -2246,18 +3417,21 @@ SP.screens = SP.screens || {};
       const hq = perm("forceChange");
       if (r.status==="HOLD" && hq){
         acts.append(
-          el("button",{class:"btn", onclick:()=>{ r.status="CONFIRMED"; audit("수동 확정 (예외 건)");
+          el("button",{class:"btn", onclick:()=>{
+            const tr=D.setStatus(r,"CONFIRMED",{act:"수동 확정 (예외 건)"});
+            if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+            D.addLedger({refId:r.id, kind:"PAYMENT", amount:r.amount, memo:"수기 확정 — 결제 확인"});
             const bb=D.branchById[r.branchId];
             D.pushMsg({at:new Date(), tpl:"confirm", to:"customer", name:r.name, phone:r.phone, resId:r.id, branchId:r.branchId, by:whoNow()});
             D.pushMsg({at:new Date(), tpl:"host_new", to:"host", name:bb.owner, phone:D.hostPhone(bb), resId:r.id, branchId:r.branchId, by:whoNow()});
-            D.occInvalidate();
             U.toast(r.id+" 확정 — 고객 · 호스트 알림 발송"); refresh(); }},"수동 확정"),
           r.linkAt? el("button",{class:"btn ghost", onclick:()=>{ r.linkAt=new Date(); audit("결제링크 재발송");
             D.pushMsg({at:new Date(), tpl:"paylink", to:"customer", name:r.name, phone:r.phone, resId:r.id, branchId:r.branchId, by:whoNow()});
             U.toast("결제링크 재발송 — 유효 24시간"); paint(); }},"링크 재발송"):null,
-          el("button",{class:"btn ghost", onclick:()=>{ r.status="CANCELLED"; r.cancelAt=new Date();
-            r.cancelReason={tag:"기타", note:"결제링크 만료 · 홀드 해제"};
-            audit("홀드 해제"); D.occInvalidate(); U.toast("홀드 해제 — 시간대 재개방"); refresh(); }},"홀드 해제"));
+          el("button",{class:"btn ghost", onclick:()=>{
+            const tr=D.setStatus(r,"EXPIRED",{act:"홀드 만료 처리 — 슬롯 자동 반환"});
+            if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+            U.toast("만료 처리 — 시간대 재개방"); refresh(); }},"만료 처리"));
       }
       if (r.status==="CONFIRMED" && hq){
         acts.append(
@@ -2277,6 +3451,28 @@ SP.screens = SP.screens || {};
         acts.append(el("button",{class:"btn", onclick:()=>{ r.checkin=true; audit("체크인 확인"); U.toast("체크인 확인"); paint(); }},"체크인 확인"));
       body.append(acts,
         el("p",{class:"note"},"예약 삭제 기능은 없습니다 — 돈이 걸린 기록은 상태와 이력으로만 남깁니다 (6.3절)"));
+
+      /* 타임라인 · 금전 원장 — 기획서 5.4~5.6 */
+      const evs=D.events.filter(e=>e.refId===r.id).slice(0,8);
+      const lgs=D.ledgerOf(r.id);
+      body.append(el("h4",{class:"d-sub"},"타임라인 · 금전 원장"));
+      body.append(el("ul",{class:"tl"},
+        evs.length? evs.map(e=>el("li",{},
+          el("span",{class:"tl-t num"},`${e.at.getMonth()+1}/${e.at.getDate()} ${R.pad2(e.at.getHours())}:${R.pad2(e.at.getMinutes())}`),
+          el("span",{class:"tl-k"},e.type),
+          el("span",{},e.detail||""), el("small",{class:"sub"}," · "+e.by)))
+        : [el("li",{class:"sub"},"이벤트 기록 없음 — 이후 상태 변화가 여기 쌓입니다")]));
+      if(r.quote) body.append(el("p",{class:"note num"},
+        `견적 스냅샷 — 기본 ${R.fmtWon(r.quote.unit)} + 추가 ${r.quote.extra}명 × ${R.fmtWon(r.quote.addFee)} = ${R.fmtWon(r.quote.total)} · ${r.quote.policy}`));
+      body.append(el("div",{},
+        lgs.length? [ ...lgs.map(l=>el("div",{class:"lg-line"},
+            el("span",{class:"num sub"},`${l.at.getMonth()+1}/${l.at.getDate()}`),
+            el("span",{}, el("b",{},l.kind), " ", l.memo, el("small",{class:"sub"}," · "+l.by)),
+            el("span",{class:"num", style:l.amount<0?"color:var(--red-deep)":""},
+              (l.amount>0?"+":"")+R.fmtNum(l.amount)))),
+          el("div",{class:"lg-sum"}, el("span",{},"원장 합계"),
+            el("span",{class:"num"},R.fmtNum(D.ledgerSum(r.id))+"원")) ]
+        : el("p",{class:"sub", style:"font-size:12.5px"},"원장 기록 없음 — 결제 · 환불 · 차감이 라인으로 추가됩니다 (덮어쓰기 없음)")));
 
       /* 특이사항 메모 스레드 — 담당자 이름과 함께 기록 */
       body.append(el("h4",{class:"d-sub"},"특이사항 메모"));
@@ -2357,15 +3553,20 @@ SP.screens = SP.screens || {};
           el("label",{class:"f-cap"},"환불 처리"), sel),
         [{label:"취소 확정",kind:"btn danger",onClick:(close)=>{
           if(!reason.value.trim()){ U.toast("사유 없이 진행할 수 없습니다","warn"); return false; }
-          r.status="CANCELLED"; r.cancelAt=new Date();
+          if(!ok && sel.value!=="none" && !perm("settings")){
+            U.toast("규정 외 환불은 마스터 승인이 필요합니다 (9.7절) — 총괄 관리자에게 요청하세요","warn");
+            return false; }
+          const tr=D.setStatus(r,"CANCELLED",{act:`강제 취소 — [${tagSel.value}]`});
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return false; }
           r.cancelReason={ tag:tagSel.value, note:reason.value.trim() };
           if(sel.value==="full") r.refund={amt:r.amount, state:"완료", at:new Date(), kind: ok? "규정":"예외(전액)"};
           else if(sel.value==="half") r.refund={amt:Math.round(r.amount*0.5), state:"완료", at:new Date(), kind:"예외(부분)"};
+          if(r.refund) D.addLedger({refId:r.id, kind:"REFUND", amount:-r.refund.amt,
+            memo:`${r.refund.kind} 환불 — [${tagSel.value}] ${reason.value.trim().slice(0,30)}`});
           const bb=D.branchById[r.branchId];
           D.pushMsg({at:new Date(), tpl:"cancel", to:"customer", name:r.name, phone:r.phone, resId:r.id, branchId:r.branchId, by:whoNow()});
           D.pushMsg({at:new Date(), tpl:"host_cancel", to:"host", name:bb.owner, phone:D.hostPhone(bb), resId:r.id, branchId:r.branchId, by:whoNow()});
-          D.occInvalidate();
-          audit(`강제 취소 — [${tagSel.value}] ${reason.value.trim()} · ${sel.value==="full"?"전액 환불":sel.value==="half"?"부분 환불 50%":"환불 없음"}`);
+          audit(`취소 상세 — ${reason.value.trim()} · ${sel.value==="full"?"전액 환불":sel.value==="half"?"부분 환불 50%":"환불 없음"}`);
           U.toast("취소 처리 — PG 즉시 취소 호출, 고객 · 호스트 알림 발송"); close(); refresh();
         }}]);
     }
@@ -2460,6 +3661,16 @@ SP.screens = SP.screens || {};
           msg.appendChild(el("p",{class:"reject"},
             `이 시간대에 이미 ${hit.id} (${R.fmtTime(hit.sh)}~${R.fmtTime(hit.eh)})가 있어 서버가 저장을 거절했습니다`));
           return false; }
+        if(D.isLockedSlot(rm.id, date, sH<17?"day":"night")){
+          msg.appendChild(el("p",{class:"reject"},
+            "긴급 잠금 슬롯 — 중복 확정 조사 중이라 신규 판매가 막혀 있습니다 (표 6-9①). 처리 대기함에서 해소 후 재개됩니다"));
+          return false; }
+        if(D.isFlagged(phoneIn.value)){
+          if(!perm("settings")){
+            msg.appendChild(el("p",{class:"reject"},
+              "반복 위반 고객(차감 확정 2회 이상)입니다 — 예약 제한 대상. 마스터 승인으로만 등록할 수 있습니다 (9.3절)"));
+            return false; }
+          U.toast("반복 위반 고객 — 마스터 예외 승인으로 등록합니다","warn"); }
         const amt=calc();
         const who=(SP.auth&&SP.auth.user)?SP.auth.user.name:"운영팀";
         const paid = payMode!=="link";
@@ -2478,10 +3689,18 @@ SP.screens = SP.screens || {};
           audit:[{at:new Date(), who,
             act: paid? `수기 예약 등록 — ${payMode==="transfer"?"계좌이체 입금":"카드 결제"} 확인 후 확정`
                      : "수기 예약 등록 — 결제링크 발송 (유효 24시간)"}] };
+        nr.quote = D.makeQuote(b, rm, nr.slot, eH-sH, nr.extra, date, amt);
         D.reservations.unshift(nr);
         if (SP.persist) SP.persist.addRes(nr.id);
         D.occInvalidate();
         D.logAudit("예약", nr.id, nr.audit[0].act);
+        if (paid){
+          D.logEvent("ReservationConfirmed", nr.id, "수기 등록 · 결제 확인");
+          D.addLedger({refId:nr.id, kind:"PAYMENT", amount:amt,
+            memo:`수기 예약 결제 (${payMode==="transfer"?"계좌이체":"카드"})`});
+        } else {
+          D.logEvent("HoldCreated", nr.id, "결제링크 발송 · 24시간 홀드");
+        }
         if(paid){
           D.pushMsg({at:new Date(), tpl:"confirm", to:"customer", name:nr.name, phone:nr.phone, resId:nr.id, branchId:b.id, by:who});
           D.pushMsg({at:new Date(), tpl:"host_new", to:"host", name:b.owner, phone:D.hostPhone(b), resId:nr.id, branchId:b.id, by:who});
@@ -2566,9 +3785,11 @@ SP.screens = SP.screens || {};
       let okN=0, dup=0; const bad=[];
       rows.forEach((row,ri)=>{
         const b=findBranch(get(row,"branch"));
-        if(!b){ bad.push([ri+1,"지점을 찾지 못함: "+(get(row,"branch")||"(빈칸)")]); return; }
+        if(!b){ bad.push([ri+1,"지점을 찾지 못함: "+(get(row,"branch")||"(빈칸)")]);
+          D.addRecon({kind:"지점 미매칭", note:(get(row,"branch")||"(빈칸)")+" — "+ri+"행", src:"네이버 가져오기"}); return; }
         const date=pDate(get(row,"date"));
-        if(!date){ bad.push([ri+1,"날짜 해석 실패: "+get(row,"date")]); return; }
+        if(!date){ bad.push([ri+1,"날짜 해석 실패: "+get(row,"date")]);
+          D.addRecon({kind:"날짜 오류", note:String(get(row,"date"))+" — "+ri+"행", src:"네이버 가져오기"}); return; }
         const ph=pkgHours(get(row,"pkg"));
         let sh=pH(get(row,"sh")); if(sh==null) sh=ph? ph[0]:18;
         let eh=pH(get(row,"eh")); if(eh==null) eh=ph? ph[1]:Math.min(sh+5,24);
@@ -2578,7 +3799,12 @@ SP.screens = SP.screens || {};
         if(D.reservations.some(x=>x.branchId===b.id && D.keyOf(x.useDate)===dk &&
             x.sh===sh && norm(x.name)===norm(name) && x.status!=="CANCELLED")){ dup++; return; }
         const hit=D.conflictAny(b.rooms[0].id, date, sh, eh);
-        if(hit){ bad.push([ri+1,`시간 겹침 — 기존 ${hit.id}`]); return; }
+        if(hit){ bad.push([ri+1,`시간 겹침 — 기존 ${hit.id}`]);
+          D.addRecon({kind:"슬롯 충돌", refId:hit.id,
+            note:`${b.name} ${R.fmtMD(date)} ${R.fmtTime(sh)} — 기존 ${hit.id}와 겹침`, src:"네이버 가져오기"}); return; }
+        if(D.isFlagged(get(row,"phone"))){
+          bad.push([ri+1,"반복 위반 고객 — 예약 제한, 대사함 확인"]);
+          D.addRecon({kind:"반복 위반", note:`${name} ${get(row,"phone")} — ${b.name}`, src:"네이버 가져오기"}); return; }
         const people=parseInt(String(get(row,"people")).replace(/\D/g,""),10)||b.baseP;
         const extra=Math.max(0, people-b.baseP);
         const amtRaw=parseInt(String(get(row,"amount")).replace(/\D/g,""),10);
@@ -2592,14 +3818,17 @@ SP.screens = SP.screens || {};
           deposit:"-", memo:"", intIssue:"", ownIssue:"", options:"",
           checkin:false, refund:null, amountDue:0, memos:[],
           audit:[{at:new Date(), who, act:"네이버 예약 내역 가져오기"}] };
+        nr.quote = D.makeQuote(b, b.rooms[0], slot, eh-sh, extra, date, nr.amount);
         D.reservations.unshift(nr);
+        D.logEvent("ExternalReservationImported", nr.id, `네이버 · ${b.name} ${R.fmtMD(date)}`);
         if(SP.persist) SP.persist.addRes(nr.id);
         okN++;
       });
       D.occInvalidate();
       D.logAudit("예약","네이버 가져오기",`등록 ${okN}건 · 중복 ${dup}건 · 실패 ${bad.length}건`);
+      D.runTriggers();
       result.append(el("div",{class: okN? "accept":"reject"},
-        el("b",{},`가져오기 완료 — 등록 ${okN}건 · 중복 건너뜀 ${dup}건 · 실패 ${bad.length}건`),
+        el("b",{},`가져오기 완료 — 등록 ${okN}건 · 중복 건너뜀 ${dup}건 · 실패 ${bad.length}건${bad.length?` (대사 대기함 적재)`:``}`),
         bad.length? el("ul",{class:"plain"}, bad.slice(0,5).map(([n,m])=>el("li",{},`${n}행: ${m}`))) : null));
       if(okN) U.toast(`네이버 예약 ${okN}건 반영 — 원장 · 현황판 · 정산에 바로 잡힙니다`);
     }
@@ -2954,9 +4183,8 @@ SP.screens = SP.screens || {};
         el("span",{}, el("b",{},"노쇼 후보")," ", `${r.roomName} ${R.fmtTime(r.sh)}~ · ${r.name} — 시작 후 ${R.POLICY.noshowWaitMin}분 미체크인 (4.3절)`),
         el("span",{class:"gap"},
           el("button",{class:"btn tiny",onclick:()=>{
-            r.status="NO_SHOW"; r.noshowAt=new Date();
-            r.audit.push({at:new Date(),who:who(),act:"노쇼 확정 — 24시간 내 정정 가능"});
-            D.logAudit("예약", r.id, "노쇼 확정"); if(SP.persist) SP.persist.touch(r);
+            const tr=D.setStatus(r,"NO_SHOW",{act:"노쇼 확정 — 24시간 내 정정 가능"});
+            if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
             U.toast("노쇼 확정 — 매출은 유지되고 정산에 포함됩니다"); SP.app.render();
           }},"노쇼 확정"),
           el("button",{class:"btn tiny ghost",onclick:()=>{
@@ -2971,9 +4199,9 @@ SP.screens = SP.screens || {};
       box.appendChild(el("div",{class:"row-line"},
         el("span",{},el("b",{},"노쇼 정정 가능")," ",`${r.id} · ${R.fmtDateK(r.useDate)} — 판정 후 24시간 이내`),
         el("button",{class:"btn tiny ghost",onclick:()=>{
-          r.status="COMPLETED"; r.checkin=true;
-          r.audit.push({at:new Date(),who:who(),act:"노쇼 정정 → 이용 완료"});
-          D.logAudit("예약", r.id, "노쇼 정정 → 이용 완료"); if(SP.persist) SP.persist.touch(r);
+          const tr=D.setStatus(r,"COMPLETED",{act:"노쇼 정정 → 이용 완료 (24시간 내)"});
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+          r.checkin=true;
           U.toast("이용 완료로 정정했습니다"); SP.app.render();
         }},"이용 완료로 정정")));
     });
@@ -2982,6 +4210,19 @@ SP.screens = SP.screens || {};
         el("span",{},el("b",{},"채널 마감 확인")," ",
           `${R.fmtDateK(r.useDate)} ${R.fmtTime(r.sh)}~${R.fmtTime(r.eh)} 자사 판매 — 네이버 · 스클에서 내렸는지 (8.1절)`),
         el("button",{class:"btn tiny",onclick:()=>{ r.chClosed=true; U.toast("채널 마감 확인 완료"); SP.app.render(); }},"확인했습니다")));
+    });
+
+    /* 최근 완료 — 검수 시한 내 신고 */
+    const doneRecent=D.reservations.filter(r=>r.branchId===bid && r.status==="COMPLETED" &&
+      (D.NOW - (()=>{const e=new Date(r.useDate); e.setHours(r.eh,0,0,0); return e;})())/3600e3 < D.settings.inspectHours &&
+      D.keyOf(r.useDate)!==D.keyOf(D.TODAY)).slice(0,3);
+    doneRecent.forEach(r=>{
+      box.appendChild(el("div",{class:"row-line"},
+        el("span",{}, el("b",{},"검수 대기")," ",
+          `${R.fmtMD(r.useDate)} ${r.roomName} ${R.fmtTime(r.sh)}~ · ${r.name} — 퇴실 후 ${D.settings.inspectHours}시간 내 신고 가능`),
+        el("span",{class:"gap"},
+          el("span",{class:"badge "+R.DEPOSIT[D.depositStateOf(r)].cls}, R.DEPOSIT[D.depositStateOf(r)].label),
+          el("button",{class:"btn tiny ghost",onclick:()=>reportModal(r)},"신고"))));
     });
 
     /* 오늘 타임라인 */
@@ -2995,7 +4236,9 @@ SP.screens = SP.screens || {};
         el("span",{class:"tl-b"}, el("b",{},r.roomName)," · ",R.fmtPeople(r.base,r.extra)," · ",r.name,
           el("small",{class:"sub"}," · ",r.phone)),   /* 이용 당일 — 전체 표시 (7.1) */
         U.chBadge(r.channel),
-        r.checkin? el("span",{class:"badge st-done"},"체크인"):U.stBadge(r.status))))
+        r.checkin? el("span",{class:"badge st-done"},"체크인"):U.stBadge(r.status),
+        (r.status==="COMPLETED"||r.status==="NO_SHOW")?
+          el("button",{class:"btn tiny ghost",onclick:e=>{e.stopPropagation(); reportModal(r);}},"신고"):null)))
       : el("div",{class:"empty"},"오늘 예약이 없습니다"));
 
     /* 빈 시간 알림 + 4주 매출 */
@@ -3009,6 +4252,50 @@ SP.screens = SP.screens || {};
 
     root.appendChild(el("div",{class:"two-col"}, el("div",{}, taskCard, tl), side));
   };
+
+
+  /* 노쇼 · 분쟁 신고 — 기획서 6.7 P0 · 9.3 기준표 · 증빙 없이는 제안 불가 */
+  function reportModal(r){
+    const b=D.branchById[r.branchId];
+    const kinds=Object.keys(D.settings.deduct);
+    const kindSel=el("select",{}, kinds.map(k=>el("option",{value:k},k)));
+    const amtIn=el("input",{type:"number", step:"5000", class:"num"});
+    const guide=el("p",{class:"sub", style:"margin:4px 0 0"});
+    function fillAmt(){
+      const d=D.settings.deduct[kindSel.value];
+      amtIn.value = d.min||"";
+      guide.textContent = d.min===0&&d.max===0 ? "실비 — 구매가 증빙 금액을 입력"
+        : d.min===d.max ? `기준 ${R.fmtWon(d.min)} · ${d.note}`
+        : `기준 ${R.fmtWon(d.min)} ~ ${R.fmtWon(d.max)} · ${d.note}`;
+    }
+    kindSel.onchange=fillAmt; fillAmt();
+    const noteIn=el("textarea",{rows:"2", placeholder:"현장 상황 — 고객 통지문에 인용됩니다"});
+    const photoList=el("ul",{class:"plain photos"});
+    const names=[];
+    const fileIn=el("input",{type:"file", multiple:true, accept:"image/*", onchange:e=>{
+      [...e.target.files].forEach(f=>{ if(names.length<6){ names.push(f.name);
+        photoList.appendChild(el("li",{}, "📷 "+f.name)); } });
+      e.target.value="";
+    }});
+    U.modal(`분쟁 신고 — ${b.name} · ${r.id}`,
+      el("div",{},
+        el("p",{class:"note"},`퇴실 후 ${D.settings.inspectHours}시간 안에 접수해야 합니다. 제안 등록 시 고객에게 사유 · 금액 · 이의 기한(${D.settings.disputeDays}일)이 통지됩니다.`),
+        el("label",{class:"f-cap"},"사유 (9.3 기준표)"), kindSel, guide,
+        el("label",{class:"f-cap"},"차감 제안 금액 (원)"), amtIn,
+        el("label",{class:"f-cap"},"사진 증빙 — 최소 1장"), fileIn, photoList,
+        el("p",{class:"sub", style:"font-size:11.5px"},"지금 단계에서는 파일 이름만 기록됩니다 — 원본은 본사 카톡으로 전달해 주세요 (사진 저장소 연동은 이후 단계)"),
+        el("label",{class:"f-cap"},"상세"), noteIn),
+      [{label:"차감 제안 등록", kind:"btn danger", onClick:(close)=>{
+        const amt=+amtIn.value||0;
+        if(!names.length){ U.toast("사진 증빙 없이는 접수할 수 없습니다 (9.7절)","warn"); return false; }
+        if(amt<=0){ U.toast("차감 금액을 입력해 주세요","warn"); return false; }
+        if(!noteIn.value.trim()){ U.toast("상세 내용은 필수입니다 — 통지문에 들어갑니다","warn"); return false; }
+        D.addIncident({ resId:r.id, branchId:b.id, kind:kindSel.value,
+          amount:amt, photos:names, note:noteIn.value.trim() });
+        U.toast(`접수 완료 — 고객 통지 예약 · 이의 ${D.settings.disputeDays}일 후 본사 확정 절차`);
+        close(); SP.app.render();
+      }}]);
+  }
 
   function lowSlots(bid){
     const agg={};
@@ -3089,7 +4376,9 @@ SP.screens = SP.screens || {};
             status:"CONFIRMED", deposit:"-", memo:"", intIssue:"", ownIssue:"",
             options:"", checkin:false, refund:null, amountDue:0,
             audit:[{at:new Date(),who:who(),act:"외부 채널 예약 수기 등록"}]};
+          r.quote=D.makeQuote(b, b.rooms[0], r.slot, r.eh-r.sh, r.extra, r.useDate, r.amount);
           D.reservations.unshift(r); D.occInvalidate();
+          D.logEvent("ExternalReservationImported", r.id, `${ch.value==="naver"?"네이버":"스클"} · 호스트 등록`);
           D.logAudit("예약", r.id, `외부 채널 등록 — ${ch.value==="naver"?"네이버예약":"스페이스클라우드"}`);
           if(SP.persist) SP.persist.addRes(r.id);
           msg.appendChild(el("p",{class:"accept"},`등록 완료 — ${r.id}. 이 시간대의 자사 판매는 자동으로 막힙니다.`));
@@ -3112,10 +4401,9 @@ SP.screens = SP.screens || {};
           `${R.fmtDateK(r.useDate)} ${R.fmtTime(r.sh)}~${R.fmtTime(r.eh)} · ${R.fmtPeople(r.base,r.extra)}`,
           el("small",{class:"sub"},` · ${r.channelNo}`)),
         el("button",{class:"btn tiny ghost",onclick:()=>{
-          r.status="CANCELLED"; r.cancelAt=new Date();
+          const tr=D.setStatus(r,"CANCELLED",{act:"채널 예약 취소 (채널 측 취소 반영)"});
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
           r.cancelReason={tag:"일정 변경", note:"채널 측 취소 반영"};
-          r.audit.push({at:new Date(),who:who(),act:"채널 예약 취소 (채널 측 취소 반영)"});
-          D.occInvalidate(); D.logAudit("예약", r.id, "채널 예약 취소"); if(SP.persist) SP.persist.touch(r);
           U.toast("취소 처리 — 시간대 재개방"); drawList();
         }},"취소"))));
     }
@@ -3703,13 +4991,212 @@ SP.screens = SP.screens || {};
     draw();
   };
 
-  /* ═══════════════ 알림 발송 현황 ═══════════════ */
-  const msgState = { days:7, to:"", status:"", q:"", page:0 };
+
+  /* ═══════════════ 분쟁 · 보증금 센터 — 기획서 5.3 · 9.3 · 9.7 ═══════════════ */
+  SP.screens.disputeCenter = function(root){
+    const isMaster=perm("settings");
+    const open=D.incidents.filter(i=>i.state==="PROPOSED"||i.state==="DISPUTED");
+    const monthKey=`${D.NOW.getFullYear()}-${D.NOW.getMonth()}`;
+    const monthDeduct=D.ledger.filter(l=>l.kind==="DEPOSIT_DEDUCT" &&
+      `${l.at.getFullYear()}-${l.at.getMonth()}`===monthKey).reduce((a,l)=>a-l.amount,0);
+    const flagged=D.flaggedList();
+
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"분쟁 · 보증금"),
+      el("p",{class:"sub"},"신고 → 증빙 → 차감 제안 → 이의 7일 → 확정. 기준표 밖의 차감은 없다 (9.3절)")));
+
+    root.appendChild(el("div",{class:"kpis k4"},
+      U.kpi({label:"진행 중", value:open.length+"건",
+        sub:open.filter(i=>i.state==="DISPUTED").length+"건 이의 · 붉은 선"}),
+      U.kpi({label:"이번 달 확정 차감", value:R.fmtWon(monthDeduct), sub:"원장 DEPOSIT_DEDUCT 합"}),
+      U.kpi({label:"검수 시한", value:D.settings.inspectHours+"시간", sub:"퇴실 후 신고 가능 (5.3절)"}),
+      U.kpi({label:"반복 위반 고객", value:flagged.length+"명", sub:"차감 확정 2회↑ · 예약 제한"})));
+
+    /* 9.3 차감 기준표 — 값은 web_settings */
+    root.appendChild(U.card("", U.secHead("보증금 차감 기준표","금액은 web_settings 값 — 협의체 의결로 변경 (편집 화면은 정책 설정 단계)"),
+      el("div",{style:"overflow-x:auto"}, el("table",{class:"grid tight"},
+        el("thead",{},el("tr",{},["사유","기준 금액","비고"].map(h=>el("th",{},h)))),
+        el("tbody",{}, Object.entries(D.settings.deduct).map(([k,v])=>el("tr",{},
+          el("td",{},el("b",{},k)),
+          el("td",{class:"num"}, v.min===0&&v.max===0? "실비" :
+            v.min===v.max? R.fmtWon(v.min) : `${R.fmtWon(v.min)} ~ ${R.fmtWon(v.max)}`),
+          el("td",{class:"sub"},v.note))))))));
+
+    /* 진행 목록 */
+    const rowsBox=el("div",{});
+    const list=D.incidents.slice(0,40);
+    if(!list.length){
+      rowsBox.appendChild(el("div",{class:"empty ok"},"접수된 신고가 없습니다 — 호스트 센터의 [신고]에서 들어옵니다"));
+    }
+    list.forEach(ic=>{
+      const rr=D.reservations.find(x=>x.id===ic.resId);
+      const b=rr? D.branchById[rr.branchId]:null;
+      const dday=Math.ceil((ic.disputeUntil-D.NOW)/864e5);
+      const st=ic.state;
+      const badge=el("span",{class:"badge "+(st==="PROPOSED"?"st-nos":st==="DISPUTED"?"st-hold":st==="CONFIRMED"?"st-cxl":"st-done")},
+        st==="PROPOSED"?"차감 제안":st==="DISPUTED"?"이의 접수":st==="CONFIRMED"?"차감 확정":"철회");
+      const acts=el("span",{class:"gap"});
+      if(st==="PROPOSED") acts.append(
+        el("button",{class:"btn tiny ghost",onclick:()=>{
+          const tr=D.disputeIncident(ic.id,"고객 이의");
+          tr.ok? U.toast("이의 접수 — 환급·차감 보류, 본사 검토"):U.toast(tr.reason,"warn");
+          SP.app.render(); }},"이의 접수"));
+      if(st==="PROPOSED"||st==="DISPUTED") acts.append(
+        el("button",{class:"btn tiny",onclick:()=>{
+          const tr=D.confirmDeduct(ic.id,{master:isMaster});
+          tr.ok? U.toast(`차감 확정 — ${R.fmtWon(ic.amount)} 원장 반영 · 고객 통지`):U.toast(tr.reason,"warn");
+          SP.app.render(); }},"차감 확정"),
+        el("button",{class:"btn tiny ghost",onclick:()=>{
+          const tr=D.withdrawIncident(ic.id,"본사 판단");
+          tr.ok? U.toast("철회 — 환급 예정으로 전환"):U.toast(tr.reason,"warn");
+          SP.app.render(); }},"철회"));
+      rowsBox.appendChild(el("div",{class:"row-line"+(st==="DISPUTED"?" hotline":"")},
+        el("span",{},
+          el("b",{}, b? b.name:"—"), " · ",
+          rr? el("button",{class:"btn tiny ghost",onclick:()=>SP.screens.detailDrawer(rr)}, ic.resId): ic.resId,
+          ` [${ic.kind}] `, el("b",{class:"num"},R.fmtWon(ic.amount)),
+          el("small",{class:"sub"},` · 증빙 ${ic.photos.length}장 · ${ic.by}`),
+          st==="PROPOSED"&&dday>0? el("small",{class:"sub"},` · 이의 마감 D-${dday}`):null,
+          ic.note? el("small",{class:"sub"},` · ${ic.note.slice(0,24)}`):null),
+        el("span",{class:"gap"}, badge, acts)));
+    });
+    root.appendChild(U.card("", U.secHead("신고 목록", `${list.length}건 · 이의 중인 건은 붉은 선`), rowsBox));
+
+    if(!isMaster) root.appendChild(el("p",{class:"note"},
+      "직원 권한: 이의 기간 중이거나 이의가 접수된 건의 확정은 마스터에게 넘어갑니다 (9.7절). 증빙 없는 확정은 누구도 불가."));
+
+    if(flagged.length) root.appendChild(U.card("", U.secHead("반복 위반 고객","차감 확정 2회 이상 — 수기 등록 시 경고 · 차단"),
+      el("div",{}, flagged.map(f=>el("div",{class:"row-line"},
+        el("span",{}, el("b",{},f.name), " ", el("span",{class:"num"},R.maskPhone(f.phone)),
+          el("small",{class:"sub"},` · ${f.cnt}회 · 최근 [${f.last}]`)),
+        el("span",{class:"badge st-cxl"},"예약 제한"))))));
+  };
+
+  /* ═══════════════ 알림 · 이벤트 센터 ═══════════════ */
+  const msgState = { days:7, to:"", status:"", q:"", page:0, tab:"send", evType:"" };
+
+  function evtView(root){
+    const s=msgState;
+    const types=[...new Set(D.events.map(e=>e.type))];
+    root.appendChild(U.card("filter", el("div",{class:"f-row"},
+      el("div",{class:"chips"},
+        el("button",{class:"chip f"+(s.evType===""?" on":""),onclick:()=>{s.evType="";SP.app.render();}},"전체"),
+        types.slice(0,9).map(t=>el("button",{class:"chip f"+(s.evType===t?" on":""),
+          onclick:()=>{s.evType=s.evType===t?"":t;SP.app.render();}},t))),
+      el("span",{class:"grow"}),
+      el("span",{class:"sub"},`${D.events.length}건 기록 · 최근 400건 보존`))));
+    const rows=D.events.filter(e=>!s.evType||e.type===s.evType).slice(0,60);
+    root.appendChild(U.card("table-card", el("table",{class:"grid"},
+      el("thead",{},el("tr",{},["시각","이벤트","대상","내용","담당"].map(h=>el("th",{},h)))),
+      el("tbody",{}, rows.length? rows.map(e=>el("tr",{},
+        el("td",{class:"num"},`${e.at.getMonth()+1}/${e.at.getDate()} ${R.pad2(e.at.getHours())}:${R.pad2(e.at.getMinutes())}`),
+        el("td",{}, el("b",{},e.type)),
+        el("td",{class:"num"}, e.refId? el("button",{class:"btn tiny ghost", onclick:()=>{
+            const rr=D.reservations.find(x=>x.id===e.refId);
+            if(rr) SP.screens.detailDrawer(rr); }}, e.refId) : "—"),
+        el("td",{},e.detail||"—"),
+        el("td",{},e.by)))
+      : [el("tr",{},el("td",{colspan:"5",class:"sub"},"아직 기록이 없습니다 — 예약 확정 · 취소 · 가져오기가 여기 쌓입니다"))]))));
+    root.appendChild(el("p",{class:"note"},"알림 · 정산 · 검수는 상태를 직접 건드리지 않고 이 이벤트를 구독해 움직입니다 — 실패해도 기록이 남아 재처리할 수 있습니다 (5.6절)."));
+  }
+
+  function reconView(root){ queueView(root); }
+
+  const OWNERS=["김서연","박지훈","이하늘","최시준"];
+  function queueView(root){
+    const s=msgState;
+    const tasks=D.taskQueue();
+    const an=D.anomalies();
+
+    /* 이상 신호 (6.3 이상 탐지) */
+    if(an.length) root.appendChild(U.card("", U.secHead("이상 신호",
+        `임계값은 정책 설정에서 — 예약 급감 ${D.settings.anomaly.resDrop}% · 노쇼 ×${D.settings.anomaly.noshowX} · 리뷰 −${D.settings.anomaly.revDrop} · 정산 ${D.settings.anomaly.settleDrop}%`),
+      el("div",{}, an.map(x=>el("div",{class:"row-line"+(x.sev>=2?" hotline":"")},
+        el("span",{}, el("b",{},`⚠ ${x.kind}`), " — ", x.detail),
+        el("span",{class:"evt-chip"},x.sev>=2?"주의":"관찰"))))));
+
+    /* 담당 필터 */
+    s.qWho=s.qWho||"";
+    root.appendChild(U.card("filter", el("div",{class:"f-row"},
+      el("div",{class:"chips"},
+        [["","전체"],["_none","미지정"],["_me","나"]].concat(OWNERS.map(o=>[o,o])).map(([v,t])=>
+          el("button",{class:"chip f"+(s.qWho===v?" on":""),
+            onclick:()=>{s.qWho=v; SP.app.render();}},t))),
+      el("span",{class:"grow"}),
+      el("span",{class:"sub"},`${tasks.length}건 — 보증금 검수 · 대사 차이 · 이의 · 콘텐츠 승인 · 긴급 신호를 한 줄로`))));
+
+    const meName=me().name;
+    const rows=tasks.filter(t=>{
+      const a=D.taskAssign[t.key];
+      if(s.qWho==="") return true;
+      if(s.qWho==="_none") return !a;
+      if(s.qWho==="_me") return a && a.who===meName;
+      return a && a.who===s.qWho;
+    });
+
+    const box=el("div",{});
+    if(!rows.length) box.appendChild(el("div",{class:"empty ok"},"이 조건의 대기 건이 없습니다"));
+    rows.slice(0,30).forEach(t=>{
+      const a=D.taskAssign[t.key];
+      const hrs=Math.floor((D.NOW-t.at)/36e5);
+      const acts=el("span",{class:"gap"});
+      /* 담당 */
+      acts.append(a? el("span",{class:"evt-chip"},"담당 "+a.who)
+        : el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.assignTask(t.key, meName); U.toast("내가 맡음 — "+meName); SP.app.render();
+          }},"내가 맡기"));
+      const sel=el("select",{style:"max-width:92px", onchange:e=>{
+        if(e.target.value){ D.assignTask(t.key, e.target.value); U.toast("담당 지정 — "+e.target.value); SP.app.render(); } }},
+        el("option",{value:""},"지정…"), OWNERS.map(o=>el("option",{value:o},o)));
+      acts.append(sel);
+      /* 이동 · 해소 */
+      if(t.go) acts.append(el("button",{class:"btn tiny ghost", onclick:()=>SP.app.go(t.go)},"화면 이동"));
+      if(t.refId){ const rr=D.reservations.find(x=>x.id===t.refId);
+        if(rr) acts.append(el("button",{class:"btn tiny ghost", onclick:()=>SP.screens.detailDrawer(rr)}, t.refId)); }
+      if(t.recon){
+        if(t.recon.kind==="긴급 · 중복 확정" && t.recon.lockKey)
+          acts.append(el("button",{class:"btn tiny", onclick:()=>{
+            D.resolveRecon(t.recon.id,"조사 종료"); D.unlockSlot(t.recon.lockKey);
+            U.toast("해소 · 잠금 해제 — 판매 재개"); SP.app.render(); }},"해소 · 잠금 해제"));
+        else acts.append(el("button",{class:"btn tiny", onclick:()=>{
+          D.resolveRecon(t.recon.id,"담당 확인"); U.toast("해소 처리 — 이벤트에 기록"); SP.app.render(); }},"해소"));
+        if(t.recon.kind==="긴급 · 도어락" && t.recon.branchId)
+          acts.append(el("button",{class:"btn tiny danger", onclick:()=>{
+            const b=D.branchById[t.recon.branchId]; b.rooms[0].active=false;
+            if(SP.persist) SP.persist.branch(b.code);
+            D.logEvent("ListingSuspended", b.code, b.name+" — 도어락 급증으로 신규 판매 일시 중지");
+            U.toast(b.name+" 신규 판매 일시 중지 — 현장 확인 후 공간 화면에서 재개"); SP.app.render();
+          }},"지점 일시 중지"));
+      }
+      box.appendChild(el("div",{class:"row-line"+(t.sev>=2?" q-open":"")},
+        el("span",{},
+          el("span",{class:"evt-chip"},t.type), " ",
+          el("b",{},t.label), " — ", t.detail,
+          el("small",{class:"sub"},` · ${hrs<48? hrs+"시간":Math.floor(hrs/24)+"일"} 경과`)),
+        acts));
+    });
+    root.appendChild(U.card("", U.secHead("처리 대기함",
+      "실패한 발송 · 대사 차이 · 이의 · 승인 대기가 담당자별 큐로 (5.6절 이벤트 기반)"), box));
+
+    const done=D.reconQueue.filter(q=>q.state!=="OPEN").slice(0,6);
+    if(done.length) root.appendChild(U.card("", U.secHead("최근 해소",""),
+      el("div",{}, done.map(q=>el("div",{class:"row-line"},
+        el("span",{class:"sub"},`[${q.kind}] ${q.note.slice(0,50)} — ${q.resolvedBy||""}`),
+        el("span",{class:"evt-chip"},"해소"))))));
+  }
+
   SP.screens.msgCenter = function(root){
     const s=msgState;
+    const openQ=D.reconQueue.filter(q=>q.state==="OPEN").length;
     root.appendChild(el("div",{class:"page-head"},
-      el("h1",{},"알림 발송 현황"),
-      el("p",{class:"sub"},"고객과 호스트에게 나간 모든 메시지 — 알림톡 우선, 실패는 문자로, 그래도 실패하면 여기서 끝까지")));
+      el("h1",{},"알림 · 이벤트 센터"),
+      el("div",{class:"tabs"},
+        [["send","발송 현황"],["evt","이벤트 로그"],["recon",`처리 대기함${D.taskQueue().length?` (${D.taskQueue().length})`:""}`]]
+          .map(([k,t])=>el("button",{class:"tab"+(s.tab===k?" on":""),
+            onclick:()=>{s.tab=k; SP.app.render();}},t))),
+      el("p",{class:"sub"},"발송 · 상태 이벤트 · 대사 대기함 — 실패한 일은 여기서 재처리합니다 (5.6절)")));
+    if(s.tab==="evt"){ evtView(root); return; }
+    if(s.tab==="recon"){ reconView(root); return; }
 
     const S=Q.msgStats();
     root.appendChild(el("div",{class:"kpi-grid four"},
@@ -3938,6 +5425,25 @@ SP.screens = SP.screens || {};
   /* ═══════════════ 공간(파티룸) KPI ═══════════════ */
   const skState={ from:null, to:null, region:"", bid:"", roomSet:null, slot:"all", page:0 };
   SP.screens.statsSpace = function(root){
+    /* 지점 건강도 — 관리 우선순위 자동 정렬 (6.3 P2 · 8.3) */
+    {
+      const hs=D.branchHealth();
+      root.appendChild(U.card("", U.secHead("지점 건강도",
+        "가동 40 · 리뷰 30 · 재예약 15 · 무클레임 15 — 점수 낮은 순 = 이번 주 들여다볼 순서"),
+        el("div",{style:"overflow-x:auto"}, el("table",{class:"grid tight"},
+          el("thead",{},el("tr",{},["순위","지점","점수","가동률(28일)","리뷰","재예약률","클레임"].map(h=>el("th",{},h)))),
+          el("tbody",{}, hs.slice(0,12).map((h,i)=>el("tr",{},
+            el("td",{class:"num"},i+1),
+            el("td",{},el("b",{},h.b.shortName||h.b.name),
+              el("small",{class:"sub"}," · "+h.b.region)),
+            el("td",{class:"num"}, el("b",{style:h.score<45?"color:var(--red-deep)":""},h.score)),
+            el("td",{class:"num"},R.fmtPct(h.occ,0)+` (완료 ${h.done})`),
+            el("td",{class:"num"},"★ "+h.rAvg.toFixed(1)),
+            el("td",{class:"num"},R.fmtPct(h.re,0)),
+            el("td",{class:"num"+(h.claims>=1?" sla-over":"")},h.claims)))))),
+        el("p",{class:"sub", style:"font-size:12px;margin:8px 0 0"},
+          `하위 12곳 표시 — 전체 ${hs.length}개 지점 동일 산식. 상위 지점의 방법(패키지 부착 · 리뷰 응대)을 하위 지점에 옮기는 것이 이 표의 용도입니다.`)));
+    }
     skState.from ||= new Date(D.TODAY.getFullYear(), D.TODAY.getMonth(), 1);
     skState.to   ||= D.TODAY;
     const s=skState;
@@ -4164,6 +5670,594 @@ SP.screens = SP.screens || {};
 })();
 
 
+/* ===== screens_admin3.js ===== */
+/* ============================================================
+   SSOPLE Dashboard — screens_admin3.js
+   3단계: 정책 설정(web_settings) · 회원/리뷰/문의 · 제휴 관리
+   ============================================================ */
+(() => {
+  const R = SP.rules, D = SP.data, U = SP.ui;
+  const el = U.el;
+  const perm = f => R.PERM[f](SP.state.role);
+  const me = () => SP.auth.user || { name:"—" };
+
+  /* ═══════════════ 정책 설정 — web_settings 전면 (9.1~9.5 · 9.7) ═══════════════ */
+  SP.screens.policyScreen = function(root){
+    const master = perm("settings");
+    const S = D.settings;
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"정책 설정 (web_settings)"),
+      el("p",{class:"sub"},"모든 수치는 코드가 아니라 여기서 삽니다 — 표준가 · 정책 개정은 분기 점주 협의체 의결 후 반영 (9.5절)")));
+
+    const inp = (v,step)=>el("input",{type:"number", step:step||"1", class:"num", value:v,
+      disabled:!master, "data-pol":"1"});
+    const row = (label, node, hint)=>el("div",{class:"pol-sec"},
+      el("span",{class:"f-cap", style:"margin:0"},label),
+      el("span",{class:"f-row"}, node, hint? el("span",{class:"sub"},hint):null));
+
+    /* 기본 · 정산 · 분쟁 */
+    const fDeposit=inp(S.deposit,"10000"), fRefund=inp(S.refundFullDays),
+          fInspect=inp(S.inspectHours), fDispute=inp(S.disputeDays),
+          fFee=inp(Math.round(S.feeRate*100));
+    root.appendChild(U.card("", U.secHead("기본 정책 (9.1 · 9.2)","이미 결제된 예약은 견적 스냅샷 금액이 유지됩니다 (5.5절) — 정책 변경은 앞으로의 예약에만"),
+      row("보증금 (원)", fDeposit, "결제 시 함께 수납"),
+      row("전액 환불 기한 (일 전)", fRefund, "그 이후는 환불 불가 — 시스템 자동 판정"),
+      row("검수 신고 시한 (시간)", fInspect, "퇴실 후 분쟁 신고 가능 시간"),
+      row("차감 이의제기 (일)", fDispute, "제안 통지 후 고객 이의 기간"),
+      row("본사 수수료 (%)", fFee, "점주 8 : 본사 2 기준 = 20%")));
+
+    /* 차감 기준표 */
+    const dedNodes={};
+    root.appendChild(U.card("", U.secHead("보증금 차감 기준표 (9.3)","금액은 시행 전 점주 협의체에서 확정 — 파손은 실비(증빙 금액)"),
+      el("div",{}, Object.entries(S.deduct).map(([k,v])=>{
+        if(k==="비품 파손") return row(k, el("span",{class:"sub"},"실비 — 구매가 증빙 금액"), v.note);
+        const a=inp(v.min,"10000"), b=inp(v.max,"10000");
+        dedNodes[k]=[a,b];
+        return row(k, el("span",{class:"f-row"}, a, el("span",{class:"sub"},"~"), b), v.note);
+      }))));
+
+    /* 포인트 · 클럽 */
+    const fRate=inp(S.point.rate), fPlus=inp(S.point.plusRate), fVip=inp(S.point.vipRate),
+          fPc=inp(S.point.plusCount), fVc=inp(S.point.vipCount), fExp=inp(S.point.expireMonths);
+    root.appendChild(U.card("", U.secHead("포인트 · 쏘플 클럽 (9.4)","적립형(무상)만 운영 — 충전형은 법무 검토 후. 현금 환급 불가는 약관 명시"),
+      row("기본 적립률 (%)", fRate, "자체예약 결제액 기준 · 본사 마케팅비 회계"),
+      row("플러스 적립률 (%)", fPlus, `완료 ${S.point.plusCount}회 이상`),
+      row("VIP 적립률 (%)", fVip, `완료 ${S.point.vipCount}회 이상`),
+      row("플러스 승급 기준 (완료 횟수)", fPc, ""),
+      row("VIP 승급 기준 (완료 횟수)", fVc, ""),
+      row("유효기간 (개월)", fExp, "소멸 30일 전 알림톡 (알림톡 연동 단계)")));
+
+    const An=S.anomaly;
+    const fAn1=inp(An.resDrop), fAn2=inp(An.noshowX), fAn3=inp(An.revDrop,"0.1"), fAn4=inp(An.settleDrop);
+    root.appendChild(U.card("", U.secHead("이상 탐지 임계값 (6.3)","45개 지점을 소수 인력으로 보는 방법 — 신호는 처리 대기함 상단에 뜹니다"),
+      row("예약 급감 (%↓)", fAn1, "최근 7일 vs 직전 7일"),
+      row("노쇼 급증 (배수)", fAn2, "지점 · 14일 vs 직전 14일"),
+      row("리뷰 급락 (점수차)", fAn3, "지점 · 최근 14일 평균"),
+      row("정산 이상치 (%↓)", fAn4, "지점 · 월 진도 대비")));
+
+    if(!master){
+      root.appendChild(el("p",{class:"note"},"정책값 변경은 마스터 권한입니다 — 값은 조회만 가능합니다 (9.7절)."));
+      return;
+    }
+    const reason=el("input",{placeholder:"변경 사유 — 협의체 의결일 · 안건 번호 등 (필수, 감사 로그에 남습니다)"});
+    root.appendChild(U.card("",
+      el("div",{class:"f-row"},
+        reason,
+        el("button",{class:"btn", onclick:()=>{
+          if(!reason.value.trim()){ U.toast("변경 사유 없이 저장할 수 없습니다 (9.5절)","warn"); return; }
+          const diffs=[];
+          const setN=(obj,key,node,label,scale)=>{
+            const nv=scale? (+node.value||0)/scale : (+node.value||0);
+            if(nv!==obj[key] && nv>0){ diffs.push(`${label} ${scale?Math.round(obj[key]*scale):obj[key]} → ${node.value}`); obj[key]=nv; }
+          };
+          setN(S,"deposit",fDeposit,"보증금");
+          setN(S,"refundFullDays",fRefund,"전액 환불 기한");
+          setN(S,"inspectHours",fInspect,"검수 시한");
+          setN(S,"disputeDays",fDispute,"이의 기간");
+          setN(S,"feeRate",fFee,"수수료(%)",100);
+          Object.entries(dedNodes).forEach(([k,[a,b]])=>{
+            const d=S.deduct[k];
+            if(+a.value!==d.min||+b.value!==d.max){
+              diffs.push(`차감 [${k}] ${d.min/10000}~${d.max/10000}만 → ${(+a.value)/10000}~${(+b.value)/10000}만`);
+              d.min=+a.value; d.max=+b.value;
+            }
+          });
+          setN(S.point,"rate",fRate,"적립률(%)");
+          setN(S.point,"plusRate",fPlus,"플러스 적립률(%)");
+          setN(S.point,"vipRate",fVip,"VIP 적립률(%)");
+          setN(S.point,"plusCount",fPc,"플러스 기준");
+          setN(S.point,"vipCount",fVc,"VIP 기준");
+          setN(S.point,"expireMonths",fExp,"포인트 유효기간");
+          setN(S.anomaly,"resDrop",fAn1,"이상 · 예약 급감(%)");
+          setN(S.anomaly,"noshowX",fAn2,"이상 · 노쇼 배수");
+          if(+fAn3.value>0 && +fAn3.value!==S.anomaly.revDrop){ diffs.push(`이상 · 리뷰 급락 ${S.anomaly.revDrop} → ${fAn3.value}`); S.anomaly.revDrop=+fAn3.value; }
+          setN(S.anomaly,"settleDrop",fAn4,"이상 · 정산(%)");
+          if(!diffs.length){ U.toast("변경된 값이 없습니다"); return; }
+          const logs = diffs.length>5? diffs.slice(0,4).concat([`외 ${diffs.length-4}건`]) : diffs;
+          logs.forEach(d=>D.logAudit("정책", "web_settings", d+` — 사유: ${reason.value.trim()}`));
+          D.logEvent("PolicyUpdated","",`${diffs.length}개 항목 — ${reason.value.trim().slice(0,30)}`);
+          U.toast(`정책 ${diffs.length}건 반영 — 전 화면 즉시 적용 · 기예약 금액 불변`);
+          SP.app.render();
+        }},"협의 결과 반영")),
+      el("p",{class:"note"},"저장 즉시 분쟁 기준표 · 정산 수수료 · 회원 등급이 같은 값을 씁니다. 법령 등 긴급 건은 선반영 후 협의체 보고 (9.5절).")));
+  };
+
+  /* ═══════════════ 회원 · 리뷰 · 문의 허브 (6.3 P0) ═══════════════ */
+  const mState = { tab:"member", q:"", grade:"", page:0, rvStar:"", rvState:"", iqState:"" };
+
+  SP.screens.membersHub = function(root){
+    const s=mState;
+    const waitInq=D.inquiries.filter(q=>q.state!=="완료").length;
+    const noReply=D.reviews.filter(v=>v.state==="게시"&&!v.reply).length;
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"회원 · 리뷰 · 문의"),
+      el("p",{class:"sub"},"고객이 남긴 모든 흔적 — 예약 원장에서 파생되므로 별도 입력이 없습니다"),
+      el("div",{class:"tabs"},
+        [["member","회원"],["review",`리뷰${noReply?` (미답글 ${noReply})`:""}`],["inq",`문의${waitInq?` (${waitInq})`:""}`]]
+          .map(([k,t])=>el("button",{class:"tab"+(s.tab===k?" on":""),
+            onclick:()=>{s.tab=k; s.page=0; SP.app.render();}},t)))));
+    ({member:memberTab, review:reviewTab, inq:inqTab})[s.tab](root);
+  };
+
+  function gradeBadge(g){
+    return el("span",{class:"badge "+(g.key==="VIP"?"grade-v":g.key==="PLUS"?"grade-p":"grade-b")},
+      `${g.label} ${g.rate}%`);
+  }
+
+  function memberTab(root){
+    const s=mState;
+    const all=D.memberIndex();
+    const vip=all.filter(m=>D.gradeOf(m.doneCnt).key==="VIP").length;
+    root.appendChild(el("div",{class:"kpis k4"},
+      U.kpi({label:"전체 회원", value:R.fmtNum(all.length)+"명", sub:"예약 이력 보유 · 전화번호 기준"}),
+      U.kpi({label:"VIP", value:vip+"명", sub:`완료 ${D.settings.point.vipCount}회 이상 · 적립 ${D.settings.point.vipRate}%`}),
+      U.kpi({label:"반복 위반", value:D.flaggedList().length+"명", sub:"예약 제한 (분쟁 화면 연동)"}),
+      U.kpi({label:"포인트 발행 잔액", value:R.fmtNum(D.points.reduce((a,t)=>a+t.amount,0))+"P",
+        sub:"본사 마케팅비 — 지점 정산과 분리 (9.4)"})));
+
+    const q=s.q.trim();
+    let rows=all.filter(m=>!q || m.name.includes(q) || m.phone.includes(q));
+    if(s.grade) rows=rows.filter(m=>D.gradeOf(m.doneCnt).key===s.grade);
+    rows.sort((a,b)=>b.sales-a.sales);
+    const PAGE=15, pages=Math.max(1,Math.ceil(rows.length/PAGE));
+    if(s.page>=pages) s.page=pages-1;
+
+    root.appendChild(U.card("filter", el("div",{class:"f-row"},
+      el("input",{type:"search", placeholder:"이름 · 연락처 검색", value:s.q,
+        oninput:e=>{s.q=e.target.value; s.page=0; SP.app.render();}}),
+      el("div",{class:"chips"}, [["","전체"],["VIP","VIP"],["PLUS","플러스"],["BASIC","베이직"]].map(([v,t])=>
+        el("button",{class:"chip f"+(s.grade===v?" on":""),
+          onclick:()=>{s.grade=v; s.page=0; SP.app.render();}},t))),
+      el("span",{class:"grow"}), el("span",{class:"sub"},`${R.fmtNum(rows.length)}명 · 매출 내림차순`))));
+
+    root.appendChild(U.card("table-card", el("table",{class:"grid"},
+      el("thead",{},el("tr",{},["회원","등급","예약","완료","노쇼","누적 매출","포인트","최근 이용",""].map(h=>el("th",{},h)))),
+      el("tbody",{}, rows.slice(s.page*PAGE,(s.page+1)*PAGE).map(m=>{
+        const g=D.gradeOf(m.doneCnt);
+        return el("tr",{},
+          el("td",{}, el("b",{},m.name), " ",
+            el("span",{class:"num sub"}, perm("viewPhoneFull")? m.phone : R.maskPhone(m.phone)),
+            D.isFlagged(m.phone)? el("span",{class:"badge st-cxl", style:"margin-left:6px"},"예약 제한"):null),
+          el("td",{}, gradeBadge(g)),
+          el("td",{class:"num"},m.resCnt),
+          el("td",{class:"num"},m.doneCnt),
+          el("td",{class:"num"+(m.noshowCnt?" sla-over":"")},m.noshowCnt),
+          el("td",{class:"num"}, perm("viewMoney")? R.fmtWon(m.sales):"—"),
+          el("td",{class:"num"}, R.fmtNum(D.pointBalance(m.phone))+"P"),
+          el("td",{class:"num sub"}, R.fmtMD(m.last)),
+          el("td",{}, el("button",{class:"btn tiny ghost", onclick:()=>memberDrawer(m)},"상세")));
+      })))));
+    root.appendChild(U.pager(s.page, pages, p=>{s.page=p; SP.app.render();}));
+  }
+
+  function memberDrawer(m){
+    const g=D.gradeOf(m.doneCnt);
+    const hist=D.reservations.filter(r=>r.phone===m.phone)
+      .sort((a,b)=>b.useDate-a.useDate).slice(0,12);
+    const pts=D.pointsOf(m.phone).slice(0,8);
+    const body=el("div",{});
+    body.append(el("div",{class:"f-row"},
+      gradeBadge(g),
+      D.isFlagged(m.phone)? el("span",{class:"badge st-cxl"},"반복 위반 — 예약 제한"):null,
+      el("span",{class:"sub"},`첫 이용 ${R.fmtMD(m.first)} · 완료 ${m.doneCnt}회 · 누적 ${perm("viewMoney")? R.fmtWon(m.sales):"—"}`)));
+
+    body.append(el("h4",{class:"d-sub"},"예약 이력"));
+    body.append(el("ul",{class:"tl"}, hist.map(r=>el("li",{onclick:()=>SP.screens.detailDrawer(r)},
+      el("span",{class:"tl-t num"},R.fmtMD(r.useDate)),
+      el("span",{}, D.branchById[r.branchId].name, " · ", R.fmtTime(r.sh),"~",R.fmtTime(r.eh)),
+      U.stBadge(r.status)))));
+
+    body.append(el("h4",{class:"d-sub"},`포인트 — 잔액 ${R.fmtNum(D.pointBalance(m.phone))}P`));
+    body.append(el("div",{},
+      pts.length? pts.map(t=>el("div",{class:"lg-line"},
+        el("span",{class:"num sub"},R.fmtMD(t.at)),
+        el("span",{}, el("b",{},t.kind)," ",t.memo, el("small",{class:"sub"}," · "+t.by)),
+        el("span",{class:"num", style:t.amount<0?"color:var(--red-deep)":""},
+          (t.amount>0?"+":"")+R.fmtNum(t.amount)+"P")))
+      : el("p",{class:"sub"},"포인트 기록 없음")));
+    if(perm("settings")){
+      const amt=el("input",{type:"number", step:"1000", placeholder:"± 금액", class:"num", style:"max-width:110px"});
+      const why=el("input",{placeholder:"사유 (필수 — 감사 로그)"});
+      body.append(el("div",{class:"f-row", style:"margin-top:8px"}, amt, why,
+        el("button",{class:"btn tiny", onclick:()=>{
+          const tr=D.addPoints(m.phone, m.name, +amt.value||0, why.value.trim());
+          tr.ok? (U.toast("포인트 조정 반영"), SP.app.render()) : U.toast(tr.reason,"warn");
+        }},"조정")));
+    } else {
+      body.append(el("p",{class:"sub", style:"font-size:12px"},"포인트 수동 조정은 마스터 권한입니다 (9.7절)"));
+    }
+    U.drawer(`${m.name} · ${perm("viewPhoneFull")? m.phone : R.maskPhone(m.phone)}`, body);
+  }
+
+  function reviewTab(root){
+    const s=mState;
+    const pub=D.reviews.filter(v=>v.state==="게시");
+    const avg=pub.length? pub.reduce((a,v)=>a+v.rating,0)/pub.length : 0;
+    root.appendChild(el("div",{class:"kpis k4"},
+      U.kpi({label:"평균 평점", value:"★ "+avg.toFixed(2), sub:`게시 ${pub.length}건 기준`}),
+      U.kpi({label:"미답글", value:pub.filter(v=>!v.reply).length+"건", sub:"낮은 평점부터 답글 권장"}),
+      U.kpi({label:"저평점 (★2 이하)", value:pub.filter(v=>v.rating<=2).length+"건", sub:"지점 품질 신호 — 붉은 선"}),
+      U.kpi({label:"신고 대기", value:D.reviews.filter(v=>v.state==="신고").length+"건", sub:"검토 후 숨김 · 게시"})));
+
+    root.appendChild(U.card("filter", el("div",{class:"f-row"},
+      el("div",{class:"chips"}, [["","전체"],["5","★5"],["4","★4"],["3","★3"],["2","★2 이하"]].map(([v,t])=>
+        el("button",{class:"chip f"+(s.rvStar===v?" on":""),
+          onclick:()=>{s.rvStar=v; SP.app.render();}},t))),
+      el("div",{class:"chips"}, [["","전체 상태"],["게시","게시"],["신고","신고"],["숨김","숨김"]].map(([v,t])=>
+        el("button",{class:"chip f"+(s.rvState===v?" on":""),
+          onclick:()=>{s.rvState=v; SP.app.render();}},t))))));
+
+    let rows=D.reviews.filter(v=>
+      (!s.rvStar || (s.rvStar==="2"? v.rating<=2 : v.rating===+s.rvStar)) &&
+      (!s.rvState || v.state===s.rvState)).slice(0,30);
+    const box=el("div",{});
+    rows.forEach(v=>{
+      const b=D.branchById[v.branchId];
+      const line=el("div",{class:"row-line"+(v.rating<=2?" rv-low":"")},
+        el("span",{},
+          el("span",{class:"stars"},"★".repeat(v.rating)+"☆".repeat(5-v.rating)),
+          " ", el("b",{},b.name), " · ", v.text,
+          el("small",{class:"sub"},` — ${v.name} · ${R.fmtMD(v.at)}`),
+          v.state!=="게시"? el("span",{class:"badge "+(v.state==="신고"?"st-nos":"st-exp"), style:"margin-left:6px"},v.state):null,
+          v.reply? el("div",{class:"sub", style:"margin-top:3px"},`↳ ${v.reply} — ${v.replyBy}`):null),
+        el("span",{class:"gap"},
+          !v.reply? el("button",{class:"btn tiny ghost", onclick:()=>{
+            const ta=el("textarea",{rows:"3", placeholder:"고객에게 보이는 답글 — 사과보다 조치가 먼저"});
+            U.modal(`답글 — ${b.name} ★${v.rating}`, el("div",{}, el("p",{class:"sub"},v.text), ta),
+              [{label:"등록", kind:"btn", onClick:(close)=>{
+                if(!ta.value.trim()){ U.toast("내용을 입력해 주세요","warn"); return false; }
+                D.reviewReply(v.id, ta.value.trim());
+                U.toast("답글 등록 — 고객 화면 반영은 프론트 연동 시"); close(); SP.app.render();
+              }}]);
+          }},"답글"):null,
+          v.state!=="숨김"? el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.reviewSetState(v.id,"숨김"); U.toast("숨김 — 고객 화면에서 제외"); SP.app.render();
+          }},"숨김") : el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.reviewSetState(v.id,"게시"); U.toast("게시 복원"); SP.app.render();
+          }},"게시")));
+      box.appendChild(line);
+    });
+    root.appendChild(U.card("", U.secHead("리뷰", `${rows.length}건 표시 — 데이터는 프론트 리뷰 기능 연동 전 시연분`), box));
+  }
+
+  function inqTab(root){
+    const s=mState;
+    const rows=D.inquiries.filter(q=>!s.iqState||q.state===s.iqState)
+      .sort((a,b)=>(a.state==="완료")-(b.state==="완료") || a.at-b.at);
+    root.appendChild(U.card("filter", el("div",{class:"f-row"},
+      el("div",{class:"chips"}, [["","전체"],["대기","대기"],["처리중","처리중"],["완료","완료"]].map(([v,t])=>
+        el("button",{class:"chip f"+(s.iqState===v?" on":""),
+          onclick:()=>{s.iqState=v; SP.app.render();}},t))),
+      el("span",{class:"grow"}),
+      el("span",{class:"sub"},"응대 시간 월~목 10~19 · 금~일 10~22 — 24시간 넘긴 대기는 붉게"))));
+    const box=el("div",{});
+    rows.slice(0,30).forEach(q=>{
+      const hrs=(D.NOW-q.at)/3600e3;
+      const over=q.state!=="완료" && hrs>24;
+      box.appendChild(el("div",{class:"row-line"+(over?" hotline":"")},
+        el("span",{},
+          el("span",{class:"evt-chip"},q.channel), " ",
+          el("b",{},q.subject), " — ", q.body,
+          el("small",{class:"sub"},` · ${q.name} ${R.maskPhone(q.phone)}${q.branchId?` · ${D.branchById[q.branchId].name}`:""}`),
+          el("small",{class:over?"sla-over":"sub"},` · ${Math.floor(hrs)}시간 경과`),
+          q.assignee? el("small",{class:"sub"},` · 담당 ${q.assignee}`):null,
+          q.answer? el("div",{class:"sub", style:"margin-top:3px"},`↳ ${q.answer}`):null),
+        el("span",{class:"gap"},
+          el("span",{class:"badge "+(q.state==="대기"?"st-nos":q.state==="처리중"?"st-pre":"st-done")},q.state),
+          q.state==="대기"? el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.inquiryTake(q.id); U.toast("담당 지정 — "+me().name); SP.app.render(); }},"내가 처리"):null,
+          q.state!=="완료"? el("button",{class:"btn tiny", onclick:()=>{
+            const ta=el("textarea",{rows:"3", placeholder:"처리 내용 — 고객에게 전달한 답"});
+            U.modal("문의 완료 처리 — "+q.subject, el("div",{}, el("p",{class:"sub"},q.body), ta),
+              [{label:"완료", kind:"btn", onClick:(close)=>{
+                if(!ta.value.trim()){ U.toast("처리 내용은 필수입니다","warn"); return false; }
+                D.inquiryClose(q.id, ta.value.trim()); U.toast("완료 — 기록 보존"); close(); SP.app.render();
+              }}]);
+          }},"완료"):null)));
+    });
+    root.appendChild(U.card("", U.secHead("문의함", "대기 → 처리중 → 완료 · 모든 처리에 담당자 이름"), box));
+  }
+
+  /* ═══════════════ 제휴 관리 (6.5 · 8.1) ═══════════════ */
+  SP.screens.partnerCenter = function(root){
+    const st=D.attachStats();
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"제휴 관리"),
+      el("p",{class:"sub"},"판매의 중심은 낱개가 아니라 패키지 — 주문은 구성 상품별로 제휴사에 분리 전달됩니다 (6.5절)")));
+
+    root.appendChild(el("div",{class:"kpis k4"},
+      U.kpi({label:"이번 달 부착률", value:R.fmtPct(st.rate,1), sub:`완료 ${st.done}건 중 ${st.attach}건 패키지 부착 · 목표 15%`}),
+      U.kpi({label:"이번 달 제휴 매출", value:R.fmtWon(st.sales), sub:"완료 주문 합계"}),
+      U.kpi({label:"진행 주문", value:D.orders.filter(o=>["신규","수락"].includes(o.state)).length+"건",
+        sub:"신규는 제휴사 수락 대기"}),
+      U.kpi({label:"지연", value:st.late+"건", sub:"클레임 지표 — 노출 제어 근거"})));
+
+    /* 패키지 */
+    root.appendChild(U.card("", U.secHead("파티 패키지 (표 6-6)","가격은 인원 구간별 정가 · 워크샵은 1인당 단가(B2B)"),
+      el("div",{class:"chgrid"}, D.packages.map(pk=>el("div",{class:"chcard"},
+        el("span",{class:"cht"},pk.name),
+        el("span",{class:"sub"}, pk.items.map(([pid,nm])=>{
+          const pt=D.partners.find(x=>x.id===pid);
+          return `${nm}(${pt.name})`;
+        }).join(" + ")),
+        el("b",{class:"num"}, pk.id==="K3"? "1인 15,000원"
+          : pk.price.map(([n,w])=>`~${n}명 ${R.fmtNum(w/10000)}만`).join(" · ")))))));
+
+    /* 주문 */
+    const obox=el("div",{});
+    D.orders.slice(0,18).forEach(o=>{
+      const r=D.reservations.find(x=>x.id===o.resId);
+      const b=D.branchById[o.branchId];
+      obox.appendChild(el("div",{class:"row-line"+(o.state==="지연"?" hotline":"")},
+        el("span",{},
+          el("b",{},o.pkgName), " · ", b? b.name:"—", " · ",
+          r? el("button",{class:"btn tiny ghost", onclick:()=>SP.screens.detailDrawer(r)}, o.resId) : o.resId,
+          el("span",{class:"num"}, " ", R.fmtWon(o.amount)),
+          el("small",{class:"sub"},` · ${o.items.length}개 상품 분리 전달 · ${R.fmtMD(o.at)}`)),
+        el("span",{class:"gap"},
+          el("span",{class:"badge "+(o.state==="완료"?"st-done":o.state==="지연"?"st-cxl":o.state==="수락"?"st-conf":"st-hold")},o.state),
+          o.state==="신규"? el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.orderSetState(o.id,"수락"); U.toast("제휴사 수락 — 이행 추적 시작"); SP.app.render(); }},"수락"):null,
+          ["수락","지연"].includes(o.state)? el("button",{class:"btn tiny", onclick:()=>{
+            D.orderSetState(o.id,"완료"); U.toast("이행 완료 — 제휴 정산 라인은 실결제 단계에서 자동 생성"); SP.app.render(); }},"완료"):null)));
+    });
+    const ridIn=el("input",{placeholder:"예약번호 (R…)", style:"max-width:150px", class:"num"});
+    const pkSel=el("select",{}, D.packages.map(pk=>el("option",{value:pk.id},pk.name)));
+    root.appendChild(U.card("", U.secHead("주문", `최근 ${Math.min(18,D.orders.length)}건 — 전화 접수분은 아래에서 수기 등록`),
+      el("div",{class:"f-row", style:"margin-bottom:10px"},
+        ridIn, pkSel,
+        el("button",{class:"btn tiny", onclick:()=>{
+          const tr=D.addOrder(ridIn.value.trim().toUpperCase(), pkSel.value);
+          tr.ok? (U.toast(`주문 등록 — ${tr.order.id} · ${R.fmtWon(tr.order.amount)}`), SP.app.render())
+               : U.toast(tr.reason,"warn");
+        }},"수기 주문 등록")),
+      obox));
+
+    /* 파트너 */
+    root.appendChild(U.card("", U.secHead("제휴사","클레임이 쌓이면 노출을 줄이고, 반복되면 퇴출 — 소수 검증 업체 원칙 (12.1절 6위)"),
+      el("div",{style:"overflow-x:auto"}, el("table",{class:"grid tight"},
+        el("thead",{},el("tr",{},["제휴사","카테고리","수수료","리드타임","클레임","상태",""].map(h=>el("th",{},h)))),
+        el("tbody",{}, D.partners.map(pt=>el("tr",{},
+          el("td",{},el("b",{},pt.name)),
+          el("td",{},pt.cat),
+          el("td",{class:"num"},Math.round(pt.fee*100)+"%"),
+          el("td",{},pt.lead),
+          el("td",{class:"num"+(pt.claims>=2?" sla-over":"")},pt.claims),
+          el("td",{}, el("span",{class:"badge "+(pt.state==="운영"?"st-done":"st-exp")},pt.state)),
+          el("td",{}, el("button",{class:"btn tiny ghost", onclick:()=>{
+            D.partnerToggle(pt.id);
+            U.toast(pt.state==="운영"? `${pt.name} 운영 재개`:`${pt.name} 일시중지 — 고객 노출 제외`);
+            SP.app.render(); }}, pt.state==="운영"?"일시중지":"재개")))))))));
+  };
+})();
+
+
+/* ===== screens_admin4.js ===== */
+/* ============================================================
+   SSOPLE Dashboard — screens_admin4.js
+   4단계: 데이터 반입 · 반출 통제 (기획서 8.2 다섯 단계)
+   ============================================================ */
+(() => {
+  const R = SP.rules, D = SP.data, U = SP.ui;
+  const el = U.el;
+  const perm = f => R.PERM[f](SP.state.role);
+  const dState = { open:null };
+
+  SP.screens.dataCenter = function(root){
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"데이터 반입 · 반출"),
+      el("p",{class:"sub"},"대량 반입이 원장을 훼손하지 않도록, 반출이 개인정보 사고가 되지 않도록 — 절차를 시스템에 심었습니다 (8.2절)")));
+
+    root.appendChild(el("div",{class:"stepline"},
+      ["① 템플릿","② 스테이징","③ 드라이런","④ 승인 반영 · 롤백","⑤ 마스킹 반출"]
+        .map(t=>el("span",{class:"stepchip"},t))));
+
+    /* ── 반입 ── */
+    const ta=el("textarea",{rows:"4",
+      placeholder:"템플릿 그대로 붙여넣기 — 첫 줄은 반드시 열 이름 (지점, 이용일, …). 엑셀에서 복사하면 탭 구분도 인식합니다"});
+    let fileName="";
+    const fileIn=el("input",{type:"file", accept:".csv,.txt,.tsv", onchange:e=>{
+      const f=e.target.files[0]; if(!f) return;
+      fileName=f.name;
+      const rd=new FileReader();
+      rd.onload=()=>{ ta.value=String(rd.result||""); U.toast(f.name+" 읽음 — 아래에서 스테이징"); };
+      rd.readAsText(f);
+      e.target.value="";
+    }});
+    root.appendChild(U.card("", U.secHead("반입 (채널 예약 내역)","자유 양식은 받지 않습니다 — 고정 템플릿만 (8.2①)"),
+      el("div",{class:"f-row", style:"margin-bottom:8px"},
+        el("button",{class:"btn ghost", onclick:()=>{
+          const t=D.buildImportTemplate();
+          U.downloadText(t.name, t.text, "text/csv");
+          U.toast("템플릿 내려받기 — 예시 두 줄을 지우고 채워 넣으세요");
+        }},"템플릿 내려받기"),
+        fileIn),
+      ta,
+      el("div",{class:"f-row", style:"margin-top:8px"},
+        el("button",{class:"btn", onclick:()=>{
+          const tr=D.stageBatch(ta.value, fileName||"붙여넣기");
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+          ta.value=""; fileName=""; dState.open=tr.batch.id;
+          U.toast(`${tr.batch.id} 스테이징 ${tr.batch.rows.length}행 — 운영 데이터는 아직 그대로입니다`);
+          SP.app.render();
+        }},"① 스테이징"),
+        el("span",{class:"sub"},"스테이징 → 드라이런(검증 리포트) → 반영 순서로만 진행됩니다"))));
+
+    /* ── 배치 목록 ── */
+    const box=el("div",{});
+    if(!D.batches.length) box.appendChild(el("div",{class:"empty"},"반입 이력이 없습니다"));
+    D.batches.slice(0,10).forEach(bt=>{
+      const rep=bt.report;
+      const stBadge=el("span",{class:"badge "+(bt.state==="APPLIED"?"st-done":bt.state==="ROLLED"?"st-exp":"st-hold")},
+        bt.state==="APPLIED"?"반영됨":bt.state==="ROLLED"?"롤백됨":"스테이징");
+      const acts=el("span",{class:"gap"});
+      if(bt.state==="STAGED"){
+        acts.append(el("button",{class:"btn tiny ghost", onclick:()=>{
+          const tr=D.dryRunBatch(bt.id);
+          tr.ok? U.toast(`드라이런 — 신규 ${tr.report.okN} · 중복 ${tr.report.dupN} · 오류 ${tr.report.errN}`)
+               : U.toast(tr.reason,"warn");
+          dState.open=bt.id; SP.app.render();
+        }},"② 드라이런"));
+        acts.append(el("button",{class:"btn tiny", disabled:!rep,
+          title:rep?"":"드라이런 없이 반영할 수 없습니다", onclick:()=>{
+          const tr=D.applyBatch(bt.id);
+          tr.ok? U.toast(`③ 승인 반영 — ${tr.okN}건 등록 (오류 행은 처리 대기함으로)`)
+               : U.toast(tr.reason,"warn");
+          SP.app.render();
+        }},"③ 반영"));
+      }
+      if(bt.state==="APPLIED"){
+        acts.append(el("button",{class:"btn tiny ghost", onclick:()=>{
+          const lines=(bt.report&&bt.report.verdicts||[]).map(v=>
+            [v.i+1, v.v, (v.reason||"").replace(/,/g," "), (v.name||"").replace(/,/g," ")].join(","));
+          U.downloadText(`${bt.id}_검증리포트.csv`,
+            "\uFEFF행,판정,사유,내용\n"+lines.join("\n")+"\n","text/csv");
+        }},"리포트 CSV"));
+        acts.append(el("button",{class:"btn tiny danger", onclick:()=>{
+          U.modal("④ 배치 롤백 — "+bt.id,
+            el("p",{},`${bt.appliedIds.length}건을 통째로 되돌립니다. 기록은 삭제되지 않고 취소로 보존되며, 결제 · 분쟁 이력이 붙은 건은 건너뜁니다.`),
+            [{label:"롤백 실행", kind:"btn danger", onClick:(close)=>{
+              const tr=D.rollbackBatch(bt.id);
+              U.toast(tr.ok? `롤백 — ${tr.undone}건 취소 전환 · ${tr.skipped}건 제외` : tr.reason,"warn");
+              close(); SP.app.render();
+            }}]);
+        }},"④ 롤백"));
+      }
+      const head=el("div",{class:"row-line"},
+        el("span",{},
+          el("b",{},bt.id), ` · ${bt.src} · ${bt.rows.length}행`,
+          el("small",{class:"sub"},` · ${R.fmtDT(bt.at)} · ${bt.by}`),
+          rep? el("span",{class:"num"},`  신규 ${rep.okN} · 중복 ${rep.dupN} · `,
+            el("b",{style:rep.errN?"color:var(--red-deep)":""},`오류 ${rep.errN}`)):
+            el("small",{class:"sub"}," · 검증 전"),
+          " ", stBadge),
+        acts);
+      box.appendChild(head);
+      if(dState.open===bt.id && rep && bt.state==="STAGED"){
+        const bad=rep.verdicts.filter(v=>v.v!=="OK").slice(0,8);
+        box.appendChild(el("div",{class:"note", style:"margin:0 0 8px"},
+          el("b",{},"반영 시: "),`신규 예약 ${rep.okN}건이 채널(pay=channel)로 등록됩니다. `,
+          bad.length? el("span",{}, "제외 행 — ",
+            bad.map(v=>`${v.i+1}행 ${v.v==="DUP"?"중복":"오류"}(${v.reason})`).join(" · ")):"제외 행 없음"));
+      }
+    });
+    root.appendChild(U.card("", U.secHead("반입 배치","묶음 단위 이력 — 무엇을 언제 누가 넣었고, 통째로 되돌릴 수 있는가 (8.2④)"), box));
+
+    /* ── 반출 ── */
+    const days=el("select",{}, [[7,"최근 7일"],[30,"최근 30일"],[90,"최근 90일"]].map(([v,t])=>el("option",{value:v},t)));
+    days.value="30";
+    const maskChk=el("input",{type:"checkbox", checked:true});
+    const reasonIn=el("input",{placeholder:"원본 반출 목적 (마스킹 해제 시 필수)", style:"display:none"});
+    maskChk.addEventListener("change",()=>{ reasonIn.style.display=maskChk.checked?"none":"block"; });
+    root.appendChild(U.card("", U.secHead("반출 (예약 내역 CSV)","연락처 마스킹이 기본입니다 — 해제는 마스터 + 목적 기록 + 감사 로그 (8.2⑤ · 9.7)"),
+      el("div",{class:"f-row"},
+        days,
+        el("label",{class:"f-row", style:"gap:6px"}, maskChk, el("span",{},"연락처 마스킹")),
+        reasonIn,
+        el("button",{class:"btn", onclick:()=>{
+          const tr=D.buildExport({ days:+days.value, mask:maskChk.checked,
+            master:perm("settings"), reason:reasonIn.value });
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+          U.downloadText(tr.name, tr.text, "text/csv");
+          U.toast("⑤ 반출 — 감사 로그에 기록되었습니다");
+        }},"⑤ 내려받기")),
+      el("p",{class:"sub", style:"font-size:12px"},
+        "지점 정본(요금 · 링크 · 운영 정보)의 반출은 [공간] 화면의 내보내기를, 총괄표 반입은 시트 동기화를 그대로 씁니다 — 이 화면은 예약 내역 전용입니다.")));
+  };
+
+  /* ═══════════════ 창업 문의 파이프라인 — franchise_leads (6.3 P2 · 8.3) ═══════════════ */
+  SP.screens.frCenter = function(root){
+    root.appendChild(el("div",{class:"page-head"},
+      el("h1",{},"창업 문의 파이프라인"),
+      el("p",{class:"sub"},"접수 → 상담 → 실사 → 계약. 영업 자료는 광고가 아니라 45개 지점의 실거래 숫자입니다 (8.3)")));
+
+    root.appendChild(el("div",{class:"kpis k4"},
+      D.FR_STAGES.map(st=>U.kpi({label:st, value:D.leads.filter(L=>L.stage===st).length+"건",
+        sub: st==="접수"?"신규 문의":st==="상담"?"자료 · 시뮬레이션 제공":st==="실사"?"현장 · 조건 검토":"오픈 준비"}))));
+
+    /* 수익 시뮬레이터 — 실데이터 */
+    const regions=[...new Set(D.branches.map(b=>b.region))];
+    const regSel=el("select",{}, el("option",{value:""},"전국"),
+      regions.map(r=>el("option",{value:r},r)));
+    const simBox=el("div",{class:"daily-grid", style:"margin-top:8px"});
+    function renderSim(){
+      const sm=D.frSim(regSel.value);
+      simBox.innerHTML="";
+      [["표본", `${sm.region} ${sm.n}개 지점`, "최근 90일 완료 기준"],
+       ["월평균 매출", R.fmtWon(Math.round(sm.avgMon)), `점주 몫 ${R.fmtWon(Math.round(sm.avgMon*0.8))} (8:2)`],
+       ["상위 지점", `${sm.topName} ${R.fmtWon(Math.round(sm.topMon))}`, "같은 조건의 상단"],
+       ["평균 가동률", R.fmtPct(sm.occAvg,0), "낮 · 밤 2슬롯 기준"]]
+      .forEach(([k,v,n])=>simBox.append(el("div",{class:"daily-cell"},
+        el("span",{class:"d-k"},k), el("b",{class:"d-v"},v), el("small",{class:"sub"},n))));
+    }
+    regSel.addEventListener("change",renderSim); renderSim();
+    root.appendChild(U.card("", U.secHead("수익 시뮬레이터","실거래 기반 — 가맹 영업의 결정적 무기 (표 8-3)"),
+      el("div",{class:"f-row"}, regSel,
+        el("span",{class:"sub"},"상담 단계에서 이 화면을 그대로 보여주세요")),
+      simBox,
+      el("p",{class:"sub", style:"font-size:11.5px;margin-top:6px"},
+        "시연 시드 기준 수치 — 실운영 전환 후에는 같은 산식이 실데이터로 계산됩니다.")));
+
+    /* 리드 목록 */
+    const box=el("div",{});
+    D.leads.slice(0,20).forEach(L=>{
+      const idx=D.FR_STAGES.indexOf(L.stage);
+      box.appendChild(el("div",{class:"row-line"},
+        el("span",{},
+          el("b",{},L.name), " ", el("span",{class:"num sub"},R.maskPhone(L.phone)),
+          el("span",{class:"evt-chip", style:"margin-left:6px"},L.region||"지역 미정"),
+          " — ", L.memo,
+          el("small",{class:"sub"},` · ${R.fmtMD(L.at)} 접수`)),
+        el("span",{class:"gap"},
+          el("span",{class:"badge "+(L.stage==="계약"?"st-done":L.stage==="실사"?"st-conf":L.stage==="상담"?"st-pre":"st-hold")},L.stage),
+          idx<D.FR_STAGES.length-1?
+            el("button",{class:"btn tiny", onclick:()=>{
+              const tr=D.frAdvance(L.id);
+              tr.ok? U.toast(`${L.name} → ${tr.stage}`) : U.toast(tr.reason,"warn");
+              SP.app.render();
+            }},"다음 단계 →"):null)));
+    });
+    const nmIn=el("input",{placeholder:"이름", style:"max-width:110px"});
+    const phIn=el("input",{placeholder:"010-", style:"max-width:130px", class:"num"});
+    const rgIn=el("select",{}, el("option",{value:""},"지역"),
+      regions.map(r=>el("option",{value:r},r)));
+    const mmIn=el("input",{placeholder:"메모 — 입지 · 예산 등"});
+    root.appendChild(U.card("", U.secHead("가맹 문의", `${D.leads.length}건 — 과천 문원동 트랙 포함`),
+      el("div",{class:"f-row", style:"margin-bottom:10px"},
+        nmIn, phIn, rgIn, mmIn,
+        el("button",{class:"btn tiny", onclick:()=>{
+          const tr=D.frAdd({name:nmIn.value.trim(), phone:phIn.value.trim(),
+            region:rgIn.value, memo:mmIn.value.trim()});
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+          nmIn.value=phIn.value=mmIn.value="";
+          U.toast("접수 — 파이프라인 합류"); SP.app.render();
+        }},"문의 등록")),
+      box));
+  };
+
+})();
+
+
 /* ===== app.js ===== */
 /* ============================================================
    SSOPLE Dashboard — app.js
@@ -4178,7 +6272,8 @@ SP.app = (() => {
 
   const NAV = {
     hq:    [["dash","대시보드"],["res","예약"],["board","현황판"],["spaces","공간"],
-            ["cancel","취소환불"],["msg","알림"],["settle","정산"],["stats","통계"],
+            ["cancel","취소환불"],["dispute","분쟁·보증금"],["msg","알림"],["settle","정산"],["stats","통계"],
+            ["members","회원·리뷰"],["partner","제휴"],["fr","창업"],["data","데이터"],["policy","정책"],
             ["notes","노트"],["audit","이력"]],
     owner: [["ohome","내 대시보드"],["ospace","내 공간"],["ochan","채널 등록"],["osettle","정산 명세"]],
     staff: [["res","오늘 예약"]]
@@ -4283,8 +6378,9 @@ SP.app = (() => {
       railEl.append(el("button",{class:"rail-item sigbtn"+(nn?" hot":""),
         onclick:()=>go("notes")}, nn? `노트 ${nn}건`:"노트 0건"));
     }
-    railEl.append(el("span",{class:"rail-item"},
-      "저장 "+((SP.persist&&SP.persist.mode==="local")?"이 브라우저":"세션(미리보기)")));
+    railEl.append(el("span",{class:"rail-item"+(SP.persist&&SP.persist.mode==="remote"?" sync":"")},
+      "저장 "+(SP.persist? (SP.persist.mode==="remote"?"공유(D1)"
+        : SP.persist.mode==="local"?"이 브라우저":"세션(미리보기)"):"세션")));
   }
 
   function topbar(){
@@ -4319,6 +6415,12 @@ SP.app = (() => {
     spaces:v=>SP.screens.spacesAdmin(v),
     cancel:v=>SP.screens.cancelsView(v),
     msg:v=>SP.screens.msgCenter(v),
+    dispute:v=>SP.screens.disputeCenter(v),
+    members:v=>SP.screens.membersHub(v),
+    partner:v=>SP.screens.partnerCenter(v),
+    policy:v=>SP.screens.policyScreen(v),
+    data:v=>SP.screens.dataCenter(v),
+    fr:v=>SP.screens.frCenter(v),
     settle:v=>SP.screens.settlement(v),
     stats:v=>SP.screens.stats(v, SP.state.pre),
     notes:v=>SP.screens.notesBoard(v),
@@ -4343,7 +6445,10 @@ SP.app = (() => {
   return { go, render, boot, setRole, loginAs, renderLogin };
 })();
 
-document.addEventListener("DOMContentLoaded", SP.app.boot);
+document.addEventListener("DOMContentLoaded", () => {
+  const r = (SP.persist && SP.persist.ready) || Promise.resolve();
+  r.then(() => { if(SP.data.runTriggers) SP.data.runTriggers(); SP.app.boot(); });
+});
 window.__SP = SP;
 
 </script>
