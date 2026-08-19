@@ -320,7 +320,19 @@ td.strong{font-weight:800}
 .hm-h{font-size:11px; color:var(--sub); display:flex; align-items:center; justify-content:center}
 
 /* ── 점주 ── */
-.form-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.form-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+.form-grid > *{min-width:0}
+.form-grid input,.form-grid select,.form-grid textarea{width:100%; max-width:100%; box-sizing:border-box}
+.modal-wide{width:min(860px,100%)}
+.modal-wide .form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.modal-wide .form-grid .span2{grid-column:span 2}
+.modal-wide .form-grid .span4{grid-column:span 4}
+.pkg-seg{display:flex; flex-wrap:wrap; gap:6px}
+.pkg-seg .seg-b{white-space:nowrap}
+@media (max-width:900px){
+  .modal-wide .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .modal-wide .form-grid .span4{grid-column:span 2}
+}
 .form-grid label{display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--sub); font-weight:600}
 .form-grid .span2{grid-column:span 2}
 .ow-tasks{display:flex; flex-direction:column}
@@ -630,7 +642,8 @@ SP.rules = (() => {
   const pad2 = n => String(n).padStart(2,"0");
   const fmtDate = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
   const fmtMD   = d => `${d.getMonth()+1}/${d.getDate()}`;
-  const fmtTime = h => `${pad2(h)}:00`;
+  /* 24시를 넘는 값은 익일로 읽는다 — 밤타임 19~익일10시 같은 패키지 표기 */
+  const fmtTime = h => h >= 24 ? `익일 ${pad2(h - 24)}:00` : `${pad2(h)}:00`;
   const WD = ["일","월","화","수","목","금","토"];
   const fmtDateK = d => `${d.getMonth()+1}월 ${d.getDate()}일(${WD[d.getDay()]})`;
 
@@ -754,6 +767,27 @@ SP.data = (() => {
     room.desc=`${b.name} — 기준 ${b.baseP}인 · 최대 ${b.maxP}인${am.length?" · "+am.join(" · "):""}. 보증금 ${b.depositLabel} · 인원 추가 ${b.addFeeLabel}`;
     room.hue=ROOM_HUE[b.shortName]||"#C9C4BF"; room.photo=""; room.active=true;
   }));
+  /* 지점 패키지의 시간대 — 지점 데이터의 hrs 표기가 있으면 그것을 쓴다 */
+  function pkgTime(b, k){
+    const base = settings.pkgTimes[k];
+    if(!base) return null;
+    const out = { k, label:base.label, s:base.s, e:base.e, slot:base.slot };
+    const p = (b && b.pkgs || []).find(x=>x.k===k);
+    const m = p && p.hrs && String(p.hrs).match(/(\d{1,2})\s*~\s*(\d{1,2})/);
+    if(m){
+      const s0=+m[1]; let e0=+m[2];
+      if(e0<=s0) e0+=24;                       // 19~09시 → 19~익일 9시
+      out.s=s0; out.e=e0;
+    }
+    return out;
+  }
+  /* 이 시간대가 낮·밤 어느 슬롯을 차지하는가 (겹치면 both) */
+  function slotSpan(sH, eH){
+    const day = sH < 17 && eH > 11;
+    const night = eH > 17;
+    return day && night ? "both" : night ? "night" : "day";
+  }
+
   function roomPrice(b, room, slot, hours, extra, date){
     const i = date ? wdIdx(date) : 0;
     const arr = slot==="day" ? (room.priceDayWd||b.priceDay) : (room.priceNightWd||b.priceNight);
@@ -825,6 +859,8 @@ SP.data = (() => {
     logEvent(EV_OF[to]||"StatusChanged", r.id, `${R.STATUS[from].label} → ${R.STATUS[to].label}`);
     if (SP.persist) SP.persist.touch(r);
     if (["CANCELLED","EXPIRED"].includes(to) || from==="HOLD") occInvalidate();
+    /* 동시 이용 예약이 끝나면 잡아 둔 반대 타임을 돌려준다 */
+    if (r.spanBoth && ["CANCELLED","EXPIRED","COMPLETED","NO_SHOW"].includes(to)) releaseSpanSlot(r);
     return { ok:true, from };
   }
 
@@ -839,10 +875,16 @@ SP.data = (() => {
   }
 
   /* 5.5 견적 스냅샷 — 결제한 가격은 요금표가 바뀌어도 그대로 재현된다 */
-  function makeQuote(b, room, slot, hours, extra, date, total){
+  function makeQuote(b, room, slot, hours, extra, date, total, opt){
+    const o = opt || {};
+    const addAmt = Math.round(o.addAmt || 0);
+    const extraAmt = extra*(b.addFee||15000);
     return { at:new Date(), slot, hours,
-      unit: total - extra*(b.addFee||15000),
-      extra, addFee:(b.addFee||15000), extraAmt: extra*(b.addFee||15000),
+      pkg: o.pkg || "", pkgLabel: (settings.pkgTimes[o.pkg]||{}).label || "",
+      sh: o.sh, eh: o.eh,
+      unit: total - extraAmt - addAmt,
+      extra, addFee:(b.addFee||15000), extraAmt,
+      addAmt, addWhy: o.addWhy || "",
       deposit: b.depositLabel||"-",
       policy: "이용 7일 전까지 전액 환불 · 6일 이내 환불 불가",
       total };
@@ -1100,6 +1142,13 @@ SP.data = (() => {
     refundFullDays: 7,                                // 7일 전 전액 환불
     disputeDays: 7,                                   // 차감 이의제기 기간
     inspectHours: 24,                                 // 퇴실 후 검수 신고 시한
+    pkgTimes: {                                       // 패키지 기본 시간 (24 초과 = 익일)
+      day:     { label:"낮타임", s:12, e:17, slot:"day"   },
+      hour3:   { label:"3시간",  s:12, e:15, slot:"day"   },
+      night:   { label:"밤타임", s:19, e:34, slot:"night" },
+      tonight: { label:"투나잇", s:19, e:24, slot:"night" },
+      allday:  { label:"올데이", s:12, e:22, slot:"both"  }
+    },
     deduct: {                                         // 9.3 차감 기준표
       "청소 미이행": { min:20000, max:50000, note:"오염 정도에 따라" },
       "비품 파손":   { min:0,     max:0,     note:"실비 — 구매가 증빙" },
@@ -1775,6 +1824,26 @@ SP.data = (() => {
       }
     });
   }
+  /* 올데이처럼 두 타임을 함께 쓰는 예약은 반대편 슬롯도 막는다 (홈페이지 이중판매 방지) */
+  function spanLockKey(r){
+    const b=branchById[r.branchId]; if(!b) return null;
+    return r.roomId+"|"+keyOf(r.useDate)+"|"+(r.slot==="day"?"night":"day");
+  }
+  function lockSpanSlot(r){
+    const lk=spanLockKey(r); if(!lk) return;
+    if(slotLocks.some(l=>l.id===lk)) return;
+    slotLocks.push({id:lk, at:new Date(), ids:[r.id], span:true});
+    occInvalidate();
+    logEvent("SpanSlotHeld", r.id, "낮·밤 동시 이용 — 반대 타임 판매 중지");
+  }
+  function releaseSpanSlot(r){
+    const lk=spanLockKey(r); if(!lk) return;
+    const i=slotLocks.findIndex(l=>l.id===lk && l.span && (l.ids||[]).includes(r.id));
+    if(i<0) return;
+    slotLocks.splice(i,1); occInvalidate();
+    logEvent("SpanSlotReleased", r.id, "동시 이용 예약 종료 — 반대 타임 판매 재개");
+  }
+
   function unlockSlot(lockKey){
     const i=slotLocks.findIndex(l=>l.id===lockKey);
     if(i<0) return false;
@@ -2155,14 +2224,14 @@ SP.data = (() => {
            points, pointsOf, pointBalance, addPoints,
            gradeOf, memberIndex,
            batches, buildImportTemplate, stageBatch, dryRunBatch, applyBatch, rollbackBatch, buildExport,
-           slotLocks, isLockedSlot, unlockSlot, runTriggers, reportPayMismatch, requestAccountChange, payHold,
+           slotLocks, isLockedSlot, unlockSlot, lockSpanSlot, releaseSpanSlot, runTriggers, reportPayMismatch, requestAccountChange, payHold,
            taskAssign, assignTask, taskQueue, anomalies,
            branchHealth, northStar, FR_STAGES, leads, frAdd, frAdvance, frSim, addDays, keyOf, dayMs,
     branches, branchById, reservations, links, conflictLog,
     membersDaily, statsDaily, heat, heatDen, occRate,
     rebuildStats, resetAggregates,
     revisit, settlement, pendingChanges, notifFails, chatbotOpen, extRegs,
-    weekRange, monthKey, vacancy, channelConflict, priceOf, roomPrice, hostPhone, batchAt,
+    weekRange, monthKey, vacancy, channelConflict, priceOf, roomPrice, pkgTime, slotSpan, hostPhone, batchAt,
     accounts, settings, hostAdj, auditLog, logAudit,
     notices, addNote, unreadNotesFor,
     messages, pushMsg, TPL, CXL_TAGS, ROOM_HUE,
@@ -3388,7 +3457,7 @@ SP.ui = (() => {
   }
 
   /* ── 모달 ── */
-  function modal(title, bodyNode, actions){
+  function modal(title, bodyNode, actions, opts){
     const back = el("div",{class:"modal-back", onclick:e=>{ if(e.target===back) close(); }});
     const closeBtn = el("button",{class:"icon-btn", onclick:()=>close(), "aria-label":"닫기"},"✕");
     const foot = el("div",{class:"modal-foot"});
@@ -3396,7 +3465,7 @@ SP.ui = (() => {
       foot.appendChild(el("button",{class:"btn "+(a.kind||"ghost"),
         onclick:()=>{ if(a.onClick(close)!==false){} }}, a.label));
     });
-    const box = el("div",{class:"modal", role:"dialog", "aria-modal":"true"},
+    const box = el("div",{class:"modal"+((opts&&opts.wide)?" modal-wide":""), role:"dialog", "aria-modal":"true"},
       el("div",{class:"modal-head"}, el("h3",{},title), closeBtn),
       el("div",{class:"modal-body"}, bodyNode),
       actions&&actions.length? foot : null);
@@ -4100,15 +4169,16 @@ SP.screens = SP.screens || {};
       const b=D.branchById[bid];
       b.rooms.filter(rm=>rm.active!==false).forEach(rm=>
         roomSel.appendChild(el("option",{value:rm.id, selected:!!(pre&&pre.room&&pre.room.id===rm.id)},rm.name)));
-      calc();
+      fillPkgs(); calc();
     }
     bSearch.oninput=fillB;
     bSel.onchange=()=>{ bid=bSel.value; fillRooms(); };
     const dIn=el("input",{type:"date", value:R.fmtDate(pre?pre.date:D.addDays(D.TODAY,1)), onchange:()=>calc()});
-    const shSel=el("select",{onchange:()=>calc()},
-      Array.from({length:13},(_,i)=>el("option",{value:11+i, selected:(pre?pre.s:18)===11+i},R.fmtTime(11+i))));
-    const ehSel=el("select",{onchange:()=>calc()},
-      Array.from({length:13},(_,i)=>el("option",{value:12+i, selected:(pre?Math.min(pre.e,24):23)===12+i},R.fmtTime(12+i))));
+    /* 시작 09~23시, 종료 10시~익일 12시 (24 초과는 익일) */
+    const shSel=el("select",{onchange:()=>{ pkgSel(""); calc(); }},
+      Array.from({length:15},(_,i)=>el("option",{value:9+i, selected:(pre?pre.s:19)===9+i},R.fmtTime(9+i))));
+    const ehSel=el("select",{onchange:()=>{ pkgSel(""); calc(); }},
+      Array.from({length:27},(_,i)=>el("option",{value:10+i, selected:(pre?Math.min(pre.e,24):24)===10+i},R.fmtTime(10+i))));
     const pplIn=el("input",{type:"number", min:"1", max:"40", value:(pre&&pre.people)||4, oninput:()=>calc()});
     const nameIn=el("input",{placeholder:"예약자 이름"});
     const phoneIn=el("input",{placeholder:"010-0000-0000"});
@@ -4121,14 +4191,54 @@ SP.screens = SP.screens || {};
     const paySeg=mkSeg([["link","결제링크 발송"],["transfer","계좌이체 확인"],["card","카드 결제 확인"]], v=>payMode=v, "link");
     const memoIn=el("textarea",{rows:"2", placeholder:"특이사항 메모 (선택) — 예: 생일파티, 케이크 반입"});
     const msg=el("div",{});
+
+    /* 패키지 — 정책의 시간표를 그대로 채운다 (지점별 hrs 표기가 있으면 우선) */
+    let curPkg="";
+    const pkgBox=el("div",{class:"pkg-seg"});
+    function pkgSel(k, silent){
+      curPkg=k;
+      [...pkgBox.children].forEach(btn=>btn.classList.toggle("on", btn.dataset.k===k));
+      if(!k || silent) return;
+      const b=D.branchById[bid], t=D.pkgTime(b,k);
+      if(!t) return;
+      shSel.value=String(t.s); ehSel.value=String(t.e);
+      calc();
+    }
+    function fillPkgs(){
+      pkgBox.innerHTML="";
+      const b=D.branchById[bid];
+      Object.keys(D.settings.pkgTimes).forEach(k=>{
+        const t=D.pkgTime(b,k); if(!t) return;
+        const has=(b.pkgs||[]).some(p=>p.k===k);
+        pkgBox.appendChild(el("button",{class:"seg-b btn tiny ghost"+(curPkg===k?" on":""),
+          "data-k":k, title:has?"이 지점 판매 중":"기본 시간표 기준",
+          onclick:()=>pkgSel(k)}, `${t.label} ${R.fmtTime(t.s)}~${R.fmtTime(t.e)}`));
+      });
+      pkgBox.appendChild(el("button",{class:"seg-b btn tiny ghost"+(curPkg===""?" on":""),
+        "data-k":"", onclick:()=>pkgSel("")},"직접 입력"));
+    }
+
+    /* 추가금액 — 수기 입력 + 사유 (원장에 별도 라인으로 남는다) */
+    const addAmtIn=el("input",{type:"number", step:"1000", placeholder:"0", oninput:()=>calc()});
+    const addWhyIn=el("input",{placeholder:"추가금액 사유 — 예: 바베큐 숯 3만, 시간 1시간 연장"});
     function calc(){
       const b=D.branchById[bid]; const rm=b.rooms.find(x=>x.id===roomSel.value)||b.rooms[0];
       const sH=+shSel.value, eH=+ehSel.value;
       if(!rm || eH<=sH){ priceLine.textContent="종료가 시작보다 늦어야 합니다"; return 0; }
       const extra=Math.max(0,(+pplIn.value||4)-(rm.baseP||4));
-      const amt=D.roomPrice(b, rm, sH<17?"day":"night", Math.min(eH-sH,5), extra);
-      priceLine.textContent=`금액 자동 계산: ${R.fmtWon(amt)} — 기준 ${rm.baseP||4}인 + 추가 ${extra}인 (공간 관리의 요금표 기준)`;
-      return amt;
+      const span=D.slotSpan(sH,eH);
+      const base=D.roomPrice(b, rm, span==="night"?"night":"day", Math.min(eH-sH,5), extra);
+      const add=Math.round(+addAmtIn.value||0);
+      const total=base+add;
+      const hours=eH-sH;
+      priceLine.innerHTML="";
+      priceLine.appendChild(el("span",{},
+        `자동 계산 ${R.fmtWon(base)} — ${R.fmtTime(sH)}~${R.fmtTime(eH)} (${hours}시간) · 기준 ${rm.baseP||4}인 + 추가 ${extra}인`));
+      if(add) priceLine.appendChild(el("span",{},
+        ` · 추가금액 ${R.fmtWon(add)} → 합계 ${R.fmtWon(total)}`));
+      if(span==="both") priceLine.appendChild(el("span",{class:"sub"},
+        " · 낮·밤 두 타임을 모두 차지합니다 (홈페이지 판매에서 함께 제외)"));
+      return total;
     }
     fillB();
     U.modal("수기 예약 등록",
@@ -4138,14 +4248,17 @@ SP.screens = SP.screens || {};
           el("label",{},"지점", bSel),
           el("label",{},"공간", roomSel),
           el("label",{},"이용일", dIn),
+          el("label",{class:"span4"},"패키지 — 누르면 시간이 자동으로 채워집니다", pkgBox),
           el("label",{},"시작", shSel),
           el("label",{},"종료", ehSel),
           el("label",{},"총 인원", pplIn),
+          el("label",{},"추가금액 (원)", addAmtIn),
+          el("label",{class:"span4"},"추가금액 사유", addWhyIn),
           el("label",{},"예약자", nameIn),
           el("label",{},"연락처", phoneIn),
           el("label",{class:"span2"},"문의 유입", inflowSeg),
-          el("label",{class:"span2"},"결제 처리", paySeg),
-          el("label",{class:"span2"},"특이사항 메모", memoIn)),
+          el("label",{class:"span4"},"결제 처리", paySeg),
+          el("label",{class:"span4"},"특이사항 메모", memoIn)),
         priceLine, msg),
       [{label:"등록", kind:"btn", onClick:(close)=>{
         msg.innerHTML="";
@@ -4154,12 +4267,22 @@ SP.screens = SP.screens || {};
         const sH=+shSel.value, eH=+ehSel.value;
         if(!nameIn.value.trim()||!phoneIn.value.trim()||!date||eH<=sH){
           msg.appendChild(el("p",{class:"reject"},"예약자 · 연락처 · 이용일 · 시간을 확인해 주세요")); return false; }
+        const addAmt=Math.round(+addAmtIn.value||0);
+        const addWhy=addWhyIn.value.trim();
+        if(addAmt && !addWhy){
+          msg.appendChild(el("p",{class:"reject"},"추가금액을 넣었다면 사유를 적어 주세요 — 정산·분쟁 때 근거가 됩니다"));
+          return false; }
+        if(addAmt<0){
+          msg.appendChild(el("p",{class:"reject"},"추가금액은 0원 이상이어야 합니다. 깎아 주는 건 할인 처리로 남겨야 합니다"));
+          return false; }
         const hit=D.conflictAny(rm.id, date, sH, eH);
         if(hit){
           msg.appendChild(el("p",{class:"reject"},
             `이 시간대에 이미 ${hit.id} (${R.fmtTime(hit.sh)}~${R.fmtTime(hit.eh)})가 있어 서버가 저장을 거절했습니다`));
           return false; }
-        if(D.isLockedSlot(rm.id, date, sH<17?"day":"night")){
+        const span=D.slotSpan(sH,eH);
+        const lockSlots = span==="both"? ["day","night"] : [span];
+        if(lockSlots.some(sl=>D.isLockedSlot(rm.id, date, sl))){
           msg.appendChild(el("p",{class:"reject"},
             "긴급 잠금 슬롯 — 중복 확정 조사 중이라 신규 판매가 막혀 있습니다 (표 6-9①). 처리 대기함에서 해소 후 재개됩니다"));
           return false; }
@@ -4176,7 +4299,9 @@ SP.screens = SP.screens || {};
         const nr={ id:"R"+(200000+Math.floor(Math.random()*99999)),
           branchId:b.id, roomId:rm.id, roomName:rm.name,
           name:nameIn.value.trim(), phone:phoneIn.value.trim(),
-          createdAt:new Date(), useDate:date, sh:sH, eh:eH, slot:sH<17?"day":"night",
+          createdAt:new Date(), useDate:date, sh:sH, eh:eH,
+          slot: span==="both"? "day" : span, spanBoth: span==="both",
+          pkg: curPkg||"", addAmt, addWhy,
           base:rm.baseP||4, extra:Math.max(0,(+pplIn.value||4)-(rm.baseP||4)), amount:amt,
           channel:inflow, pay: paid? payMode : "link",
           channelNo:"", status: paid? "CONFIRMED":"HOLD",
@@ -4187,15 +4312,20 @@ SP.screens = SP.screens || {};
           audit:[{at:new Date(), who,
             act: paid? `수기 예약 등록 — ${payMode==="transfer"?"계좌이체 입금":"카드 결제"} 확인 후 확정`
                      : "수기 예약 등록 — 결제링크 발송 (유효 24시간)"}] };
-        nr.quote = D.makeQuote(b, rm, nr.slot, eH-sH, nr.extra, date, amt);
+        nr.quote = D.makeQuote(b, rm, nr.slot, eH-sH, nr.extra, date, amt,
+          { addAmt, addWhy, pkg:curPkg, sh:sH, eh:eH });
+        if(addWhy) nr.memos.unshift({at:new Date(), by:who, text:`추가금액 ${R.fmtWon(addAmt)} — ${addWhy}`});
         D.reservations.unshift(nr);
         if (SP.persist) SP.persist.addRes(nr.id);
+        if (nr.spanBoth) D.lockSpanSlot(nr);
         D.occInvalidate();
         D.logAudit("예약", nr.id, nr.audit[0].act);
         if (paid){
           D.logEvent("ReservationConfirmed", nr.id, "수기 등록 · 결제 확인");
-          D.addLedger({refId:nr.id, kind:"PAYMENT", amount:amt,
+          D.addLedger({refId:nr.id, kind:"PAYMENT", amount:amt-addAmt,
             memo:`수기 예약 결제 (${payMode==="transfer"?"계좌이체":"카드"})`});
+          if(addAmt) D.addLedger({refId:nr.id, kind:"PAYMENT", amount:addAmt,
+            memo:`추가금액 — ${addWhy}`});
         } else {
           D.logEvent("HoldCreated", nr.id, "결제링크 발송 · 24시간 홀드");
         }
@@ -4208,7 +4338,7 @@ SP.screens = SP.screens || {};
           U.toast("결제링크 발송 — 24시간 동안 시간대를 잡아둡니다");
         }
         close(); SP.app.go("res",{id:nr.id});
-      }}]);
+      }}], {wide:true});
   }
   SP.screens.manualModal = manualModal;
 
