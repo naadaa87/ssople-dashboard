@@ -1545,6 +1545,30 @@ SP.data = (() => {
         answer: st==="완료"?"안내해 드렸습니다":"", up:0 });
     }
   })();
+  /* 문의 수기 접수 — 전화·카카오 대장 (실운영에선 cust_inquiries 실테이블로) */
+  let ciSeq=900;
+  function addInquiry(o){
+    if(!o || !o.subject) return { ok:false, reason:"제목(요지)은 필수입니다" };
+    const q={ id:"I"+String(ciSeq++), at:new Date(),
+      channel:o.channel||"전화", name:o.name||"", phone:o.phone||"",
+      branchId:o.branchId||"", subject:o.subject, body:(o.body||"").slice(0,500),
+      state:"대기", assignee:"", answer:"", up:upNow() };
+    inquiries.unshift(q);
+    logAudit("문의", q.id, "수기 접수 — "+q.channel);
+    logEvent("InquiryCreated", q.id, q.subject);
+    return { ok:true, inquiry:q };
+  }
+
+  /* 점주 문의 (owner_inquiries) — 호스트 센터에서 접수, 본사가 답변 */
+  const ownerInqs=[];
+  function answerOwnerInq(id, answer){
+    const g=ownerInqs.find(x=>x.id===id); if(!g||!answer) return { ok:false, reason:"답변 내용은 필수입니다" };
+    g.status="answered"; g.answer=answer; g.answeredAt=new Date();
+    logAudit("점주 문의", g.receipt||g.id, "답변 등록");
+    logEvent("OwnerInquiryAnswered", g.receipt||g.id, g.title);
+    return { ok:true };
+  }
+
   function inquiryTake(id){
     const q=inquiries.find(x=>x.id===id); if(!q) return false;
     q.state="처리중"; q.assignee=_by(); q.up=upNow();
@@ -1931,6 +1955,9 @@ SP.data = (() => {
     inquiries.filter(i2=>i2.state!=="완료" && (NOW-i2.at)/36e5>24).forEach(i2=>q.push({
       key:"iq:"+i2.id, type:"CS", sev:1, label:"문의 SLA 초과",
       detail:`${i2.subject} — ${Math.floor((NOW-i2.at)/36e5)}시간 경과`, at:i2.at, go:"members" }));
+    ownerInqs.filter(g=>g.status!=="answered").forEach(g=>q.push({
+      key:"oi:"+g.id, type:"점주", sev:1, label:"점주 문의 답변 대기",
+      detail:`[${g.type}] ${g.title}${g.ownerName?" — "+g.ownerName:""}`, at:g.at, go:"members" }));
     reviews.filter(v=>v.state==="신고").forEach(v=>q.push({
       key:"rv:"+v.id, type:"콘텐츠", sev:1, label:"리뷰 신고 검토",
       detail:`${branchById[v.branchId].name} ★${v.rating} — ${v.text.slice(0,20)}`, at:v.at, go:"members" }));
@@ -2099,7 +2126,8 @@ SP.data = (() => {
            incidents, addIncident, disputeIncident, confirmDeduct, withdrawIncident,
            incidentsOf, depositStateOf, isFlagged, flaggedList,
            reviews, reviewReply, reviewSetState,
-           inquiries, inquiryTake, inquiryClose,
+           inquiries, addInquiry, inquiryTake, inquiryClose,
+           ownerInqs, answerOwnerInq,
            partners, packages, orders, pkgPrice, orderSetState, addOrder, partnerToggle, attachStats,
            points, pointsOf, pointBalance, addPoints,
            gradeOf, memberIndex,
@@ -2150,6 +2178,428 @@ SP.auth = (() => {
   return { login, logout, managers, byId, who,
            get user(){ return user; },
            get accounts(){ return D.accounts; } };
+})();
+
+
+/* ===== live.js ===== */
+/* ============================================================
+   SSOPLE Dashboard — live.js  (실운영 모드)
+   /api/ops 가 살아 있으면: 시연 시드를 비우고 실테이블에서 수화,
+   모든 변경은 서버 규칙(전이 · 이중예약 · 원장 추가만)을 통과한다.
+   없으면 조용히 기존 시연 + dash-sync 경로로 내려간다.
+   ============================================================ */
+SP.live = (() => {
+  const D = SP.data, R = SP.rules;
+  const API = "/api/ops";
+  let on = false, since = 0, pushing = false;
+  let settingsDirty = false;
+  const dirtyInc = new Set(), dirtyRec = new Set();
+  const unlocks = [];
+  let holdDirty = false;
+  let byCode = {}, byDbId = {};
+  const dirtyRv = new Set(), dirtyCinq = new Set(), dirtyOinq = new Set(),
+        dirtyOrd = new Set(), dirtyLead = new Set();
+
+  const canFetch = () => typeof fetch === "function";
+  const role  = () => SP.state && SP.state.role === "hq_admin" ? "master" : "staff";
+  const actor = () => { try { return encodeURIComponent((SP.auth.user && SP.auth.user.name) || ""); } catch(e){ return ""; } };
+  const hdr   = () => ({ "x-ssople-role": role(), "x-ssople-actor": actor() });
+
+  const fmtD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const pD   = s => { const [y,m,dd] = String(s).split("-").map(Number); return new Date(y, m-1, dd); };
+  const SH   = { day:[11,16], night:[17,22] };
+
+  /* ── 상태 사전 — 대시보드 10종 ↔ 호스트 5종 ── */
+  const TO_DB = { HOLD:"waiting", PENDING_PAYMENT:"waiting", CONFIRMED:"confirmed",
+    PRE_USE:"confirmed", IN_USE:"confirmed", COMPLETED:"completed",
+    CANCELLED:"canceled", NO_SHOW:"noshow", EXPIRED:"canceled", CLOSED:"completed" };
+  function fromDb(row, ext){
+    if (row.status === "canceled" && (ext.cancel_tag === "만료")) return "EXPIRED";
+    return { waiting:"HOLD", confirmed:"CONFIRMED", completed:"COMPLETED",
+      canceled:"CANCELLED", noshow:"NO_SHOW" }[row.status] || "HOLD";
+  }
+
+  function toServer(r){
+    const b = D.branchById[r.branchId];
+    const extraAmt = (r.quote && r.quote.extraAmt) || r.extra * ((b && b.addFee) || 15000);
+    const o = {
+      code: r.id, branch_code: b ? b.code : "",
+      name: r.name || "", phone: r.phone || "",
+      use_date: fmtD(r.useDate), slot: r.slot,
+      people_base: r.base || 0, people_extra: r.extra || 0,
+      base_amount: Math.max(0, (r.amount || 0) - extraAmt),
+      extra_amount: extraAmt, option_amount: 0, total_amount: r.amount || 0,
+      deposit_amount: D.settings.deposit,
+      deposit_status: (r.pay === "link" || r.status === "HOLD") ? "waiting" : "paid",
+      balance_method: r.pay || "", status: TO_DB[r.status] || "waiting",
+      source: r.channel === "own" ? "manual" : "external",
+      channel: r.channel === "own" ? "" : r.channel,
+      request_note: "", cancel_reason: "", refund_type: "",
+      canceled_at: r.cancelAt ? new Date(r.cancelAt).toISOString() : null,
+      ext: {
+        quote_json: r.quote ? JSON.stringify(r.quote) : null,
+        memos_json: JSON.stringify((r.memos || []).map(m => ({ ...m, at: +m.at }))),
+        int_issue: r.intIssue || "", own_issue: r.ownIssue || "",
+        checkin: r.checkin ? 1 : 0,
+        noshow_at: r.noshowAt ? new Date(r.noshowAt).toISOString() : null,
+        refund_amount: r.refund ? r.refund.amt : null,
+        refund_kind: r.refund ? r.refund.kind : "",
+        cancel_tag: r.status === "EXPIRED" ? "만료" : (r.cancelReason ? r.cancelReason.tag : ""),
+        channel_no: r.channelNo || "", batch_id: r.batchId || ""
+      }
+    };
+    if (r.status === "EXPIRED"){ o.cancel_reason = "[만료] 결제 기한 경과 — 슬롯 자동 반환"; o.refund_type = "none"; }
+    else if (r.cancelReason) o.cancel_reason = `[${r.cancelReason.tag}] ${r.cancelReason.note || ""}`.slice(0, 200);
+    if (r.status === "CANCELLED") o.refund_type = r.refund ? (r.refund.amt >= r.amount ? "full" : "partial") : "none";
+    const la = (r.audit || [])[r.audit.length - 1];
+    if (la && r._loggedAct !== la.act){ o.log = { action: "대시보드", detail: la.act }; r._loggedAct = la.act; }
+    return o;
+  }
+
+  function fromServer(row, ext){
+    ext = ext || {};
+    const b = byCode[""+row.branch_code] || byCode[row.code_branch] || null;
+    if (!b) return null;
+    const [sh, eh] = SH[row.slot] || SH.day;
+    let refund = null;
+    if (ext.refund_amount != null) refund = { amt: ext.refund_amount, kind: ext.refund_kind || "규정",
+      state: "완료", at: row.canceled_at ? new Date(row.canceled_at) : new Date() };
+    const r = {
+      id: row.code, branchId: b.id, roomId: b.rooms[0].id, roomName: b.rooms[0].name,
+      name: row.name, phone: row.phone || "",
+      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      useDate: pD(row.use_date), sh, eh, slot: row.slot,
+      base: row.people_base || b.baseP, extra: row.people_extra || 0,
+      amount: row.total_amount || 0,
+      channel: row.source === "external" ? (row.channel || "naver") : "own",
+      pay: row.source === "external" ? "channel" : (row.balance_method || "web"),
+      channelNo: ext.channel_no || "", status: fromDb(row, ext),
+      deposit: "-", memo: "", intIssue: ext.int_issue || "", ownIssue: ext.own_issue || "",
+      options: "", checkin: !!ext.checkin, refund, amountDue: 0,
+      cancelAt: row.canceled_at ? new Date(row.canceled_at) : null,
+      noshowAt: ext.noshow_at ? new Date(ext.noshow_at) : null,
+      cancelReason: row.cancel_reason ? { tag: ext.cancel_tag || "기타", note: row.cancel_reason } : null,
+      memos: safeJ(ext.memos_json, []).map(m => ({ ...m, at: new Date(m.at) })),
+      audit: [], batchId: ext.batch_id || "",
+      quote: safeJ(ext.quote_json, null), _loggedAct: null
+    };
+    return r;
+  }
+  const safeJ = (s, d) => { try { return s ? JSON.parse(s) : d; } catch(e){ return d; } };
+
+  function applySettings(vjson){
+    const v = typeof vjson === "string" ? safeJ(vjson, null) : vjson;
+    if (!v) return;
+    ["feeRate","deposit","refundFullDays","disputeDays","inspectHours"].forEach(k => {
+      if (typeof v[k] === "number") D.settings[k] = v[k]; });
+    if (v.deduct) Object.entries(v.deduct).forEach(([k, x]) => {
+      if (D.settings.deduct[k]) Object.assign(D.settings.deduct[k], x); });
+    if (v.point)   Object.assign(D.settings.point, v.point);
+    if (v.anomaly) Object.assign(D.settings.anomaly, v.anomaly);
+  }
+
+  const KV_SKIP = new Set(["settings","events","ledger","recon","incidents","slotLocks","payHold"]);
+  function applyKvRows(rows){
+    (rows || []).forEach(r => {
+      if (KV_SKIP.has(r.k)) return;
+      try { SP.persist._applyKv(r.k, JSON.parse(r.v)); } catch(e){}
+    });
+  }
+
+  function upsertRes(row, ext, register){
+    const r = fromServer(row, ext);
+    if (!r) return 0;
+    const i = D.reservations.findIndex(x => x.id === r.id);
+    if (i >= 0){ const old = D.reservations[i]; r.audit = old.audit; r._loggedAct = old._loggedAct;
+      D.reservations[i] = r; }
+    else D.reservations.unshift(r);
+    if (register && SP.persist) SP.persist._known(r.id);
+    return 1;
+  }
+  const hydLedger = l => ({ id: "L" + l.id, at: new Date(l.at), refId: l.ref_id,
+    kind: l.kind, amount: l.amount, memo: l.memo, by: l.actor, _synced: true });
+  const hydEvent  = e => ({ id: "E" + e.id, at: new Date(e.at), type: e.type,
+    refId: e.ref_id, detail: e.detail, by: e.actor, _synced: true });
+  const hydInc = x => ({ id: x.id, at: new Date(x.at), resId: x.res_code,
+    branchId: (byCode[x.branch_code] || {}).id || "", kind: x.kind, note: x.note,
+    photos: safeJ(x.photos_json, []), amount: x.amount, state: x.state,
+    disputeUntil: x.dispute_until ? new Date(x.dispute_until) : new Date(),
+    by: x.actor, _synced: true, ...safeJ(x.extra_json, {}) });
+  const hydRec = x => ({ id: x.id, at: new Date(x.at), kind: x.kind, refId: x.ref_id,
+    branchId: (byCode[x.branch_code] || {}).id || "", lockKey: x.lock_key,
+    note: x.note, src: x.src, state: x.state, by: x.actor, _synced: true,
+    ...safeJ(x.extra_json, {}) });
+
+  const hydReview = r => ({ id:"V"+r.id, at:new Date(r.created_at||Date.now()),
+    branchId:(byDbId[r.branch_id]||{}).id||"", name:r.cust_name||"고객", phone:"",
+    rating:r.rating, text:r.content||"",
+    state: r.hidden ? "숨김"
+      : (r.report_status === "requested" || r.visibility === "reported") ? "신고"
+      : ({visible:"게시",hidden:"숨김",reported:"신고"}[r.visibility] || "게시"),
+    reply:r.reply||"", replyBy:"", replyAt:(r.replied_at||r.reply_updated_at)? new Date(r.replied_at||r.reply_updated_at):null,
+    up:0, _synced:true });
+  const hydCinq = r => ({ id:"I"+r.id, at:new Date(r.at), channel:r.channel,
+    name:r.name||"", phone:r.phone||"", branchId:(byCode[r.branch_code]||{}).id||"",
+    subject:r.subject, body:r.body||"", state:r.state, assignee:r.assignee||"",
+    answer:r.answer||"", closedAt:r.closed_at? new Date(r.closed_at):undefined,
+    up:0, _synced:true });
+  const hydOinq = r => ({ id:"G"+r.id, at:new Date(r.created_at||Date.now()),
+    branchId:(byCode[r.branch_code]||{}).id||"", type:r.type, title:r.title,
+    content:r.content||"", status:r.status, answer:r.answer||"",
+    ownerName:r.owner_name||"", receipt:r.receipt_no||"", _synced:true });
+  const hydPoint = r => ({ id:"T"+r.id, at:new Date(r.at), phone:r.phone,
+    name:r.name||"", kind:r.kind, amount:r.amount, memo:r.memo||"",
+    resId:r.res_code||"", by:r.actor||"", _synced:true });
+  const hydOrder = r => ({ id:"O"+r.id, at:new Date(r.at), resId:r.res_code,
+    branchId:(byCode[r.branch_code]||{}).id||"", pkgId:r.pkg_id, pkgName:r.pkg_name,
+    items:safeJ(r.items_json,[]), amount:r.amount, state:r.state, up:0, _synced:true });
+  const hydLead = r => ({ id:"F"+r.id, at:new Date(r.at), name:r.name, phone:r.phone,
+    region:r.region||"", memo:r.memo||"", stage:r.stage, up:0, _synced:true });
+  function upsertList(arr, row, skip){
+    if (skip && skip.has(row.id)) return 0;
+    const i = arr.findIndex(x => x.id === row.id);
+    if (i >= 0) Object.assign(arr[i], row); else arr.unshift(row);
+    return 1;
+  }
+
+  /* ── 부팅 — 시연 시드 제거 후 실데이터 수화 ── */
+  async function boot(){
+    if (!canFetch()) return false;
+    try {
+      let signal; try { const c = new AbortController(); setTimeout(() => c.abort(), 4500); signal = c.signal; } catch(e){}
+      const res = await fetch(API + "?op=boot", { signal, headers: { accept: "application/json" } });
+      if (!res || !res.ok) return false;
+      const j = await res.json();
+      if (!j || j.ok !== true || j.live !== true) return false;
+
+      byCode = {}; D.branches.forEach(b => byCode[b.code] = b);
+      byDbId = {}; (j.branches || []).forEach(x => { if (byCode[x.code]) byDbId[x.id] = byCode[x.code]; });
+      const known = new Set(j.branches.map(x => x.code));
+
+      /* 시연 시드 제거 — 지금부터는 장부가 진실 */
+      [D.reservations, D.events, D.ledger, D.incidents, D.reconQueue, D.slotLocks,
+       D.reviews, D.inquiries, D.ownerInqs, D.orders, D.points, D.leads, D.notices, D.pendingChanges]
+        .forEach(a => a.length = 0);
+      Object.keys(D.hostAdj).forEach(k => delete D.hostAdj[k]);
+      Object.keys(D.payHold).forEach(k => delete D.payHold[k]);
+      D.batches.length = 0;
+
+      const extMap = {}; (j.ext || []).forEach(e => extMap[e.code] = e);
+      let unknown = 0;
+      (j.res || []).forEach(row => { if (!upsertRes(row, extMap[row.code], true)) unknown++; });
+      (j.ledger || []).forEach(l => D.ledger.push(hydLedger(l)));
+      (j.events || []).forEach(e => D.events.push(hydEvent(e)));
+      (j.incidents || []).forEach(x => D.incidents.push(hydInc(x)));
+      (j.recon || []).forEach(x => D.reconQueue.push(hydRec(x)));
+      (j.locks || []).forEach(l => D.slotLocks.push({ id: l.id, at: new Date(l.at),
+        ids: safeJ(l.ids_json, []), _synced: true }));
+      (j.holds || []).forEach(h => { const b = byCode[h.branch_code]; if (b) D.payHold[b.id] = true; });
+      (j.reviews || []).forEach(r => D.reviews.push(hydReview(r)));
+      (j.cinq || []).forEach(r => D.inquiries.push(hydCinq(r)));
+      (j.oinq || []).forEach(r => D.ownerInqs.push(hydOinq(r)));
+      (j.points || []).forEach(r => D.points.push(hydPoint(r)));
+      (j.orders || []).forEach(r => D.orders.push(hydOrder(r)));
+      (j.leads || []).forEach(r => D.leads.push(hydLead(r)));
+      applyKvRows(j.kv);
+      if (j.settings && j.settings.policy) applySettings(j.settings.policy);
+      const missing = D.branches.filter(b => !known.has(b.code)).length;
+      if (missing) D.addRecon({ kind: "지점 미등록", src: "실운영 부팅",
+        note: `총괄표 지점 ${missing}곳이 D1 branches에 없습니다 — migration_2 실행 필요` });
+      D.occInvalidate();
+      since = j.now || Date.now();
+      on = true;
+      return true;
+    } catch(e){ return false; }
+  }
+
+  /* ── 밀어내기 — 서버 규칙 통과 ── */
+  async function flush(dirty, clearFn){
+    if (!on || pushing || !canFetch()) return;
+    pushing = true;
+    try {
+      const body = { res: [], ledger: [], events: [], incidents: [], recon: [],
+        locks: [], unlocks: unlocks.splice(0), payHold: null, settings: null, kv: {} };
+      const resIds = new Set([...dirty.added, ...dirty.patch]);
+      resIds.forEach(id => { const r = D.reservations.find(x => x.id === id);
+        if (r) body.res.push(toServer(r)); });
+      D.ledger.forEach(l => { if (!l._synced) body.ledger.push({ tmp: l.id, ref_id: l.refId,
+        kind: l.kind, amount: l.amount, memo: l.memo }); });
+      D.events.slice(0, 60).forEach(e => { if (!e._synced) body.events.push({ tmp: e.id,
+        type: e.type, ref_id: e.refId, detail: e.detail }); });
+      D.incidents.forEach(ic => { if (!ic._synced || dirtyInc.has(ic.id))
+        body.incidents.push({ id: ic.id, at: +ic.at, res_code: ic.resId,
+          branch_code: (D.branchById[ic.branchId] || {}).code || "", kind: ic.kind,
+          note: ic.note, photos_json: JSON.stringify(ic.photos || []), amount: ic.amount,
+          state: ic.state, dispute_until: +ic.disputeUntil,
+          extra_json: JSON.stringify({ disputeNote: ic.disputeNote, confirmedBy: ic.confirmedBy, withdrawMemo: ic.withdrawMemo }) }); });
+      D.reconQueue.forEach(q => { if (!q._synced || dirtyRec.has(q.id))
+        body.recon.push({ id: q.id, at: +q.at, kind: q.kind, ref_id: q.refId,
+          branch_code: (D.branchById[q.branchId] || {}).code || "", lock_key: q.lockKey || "",
+          note: q.note, src: q.src, state: q.state,
+          extra_json: JSON.stringify({ resolvedBy: q.resolvedBy, resolveMemo: q.resolveMemo }) }); });
+      D.slotLocks.forEach(l => { if (!l._synced) body.locks.push({ id: l.id, at: +l.at,
+        ids_json: JSON.stringify(l.ids || []) }); });
+      if (holdDirty){ body.payHold = {};
+        Object.entries(D.payHold).forEach(([bid, v]) => {
+          const b = D.branchById[bid]; if (b) body.payHold[b.code] = v ? 1 : 0; }); }
+      body.reviewUpd = []; body.cinqNew = []; body.cinqUpd = []; body.oinqUpd = [];
+      body.pointNew = []; body.orderNew = []; body.orderUpd = [];
+      body.leadNew = []; body.leadUpd = [];
+      dirtyRv.forEach(id => { const v = D.reviews.find(x => x.id === id); if (!v) return;
+        body.reviewUpd.push({ id: +String(v.id).replace(/\D/g,""), reply: v.reply || null,
+          replied_at: v.replyAt ? new Date(v.replyAt).toISOString() : null,
+          visibility: { "게시":"visible", "숨김":"hidden", "신고":"reported" }[v.state] || "visible" }); });
+      D.inquiries.forEach(q => {
+        if (!q._synced) body.cinqNew.push({ tmp: q.id, at: +q.at, channel: q.channel,
+          name: q.name, phone: q.phone,
+          branch_code: (D.branchById[q.branchId] || {}).code || "",
+          subject: q.subject, body: q.body, state: q.state, assignee: q.assignee });
+        else if (dirtyCinq.has(q.id)) body.cinqUpd.push({ id: +String(q.id).replace(/\D/g,""),
+          state: q.state, assignee: q.assignee, answer: q.answer,
+          closed_at: q.closedAt ? +q.closedAt : null }); });
+      dirtyOinq.forEach(id => { const g = D.ownerInqs.find(x => x.id === id); if (!g) return;
+        body.oinqUpd.push({ id: +String(g.id).replace(/\D/g,""), status: g.status, answer: g.answer }); });
+      D.points.forEach(t => { if (!t._synced) body.pointNew.push({ tmp: t.id, at: +t.at,
+        phone: t.phone, name: t.name, kind: t.kind, amount: t.amount, memo: t.memo,
+        res_code: t.resId || "" }); });
+      D.orders.forEach(o => {
+        if (!o._synced) body.orderNew.push({ tmp: o.id, at: +o.at, res_code: o.resId,
+          branch_code: (D.branchById[o.branchId] || {}).code || "", pkg_id: o.pkgId,
+          pkg_name: o.pkgName, items_json: JSON.stringify(o.items || []),
+          amount: o.amount, state: o.state });
+        else if (dirtyOrd.has(o.id)) body.orderUpd.push({ id: +String(o.id).replace(/\D/g,""), state: o.state }); });
+      D.leads.forEach(L => {
+        if (!L._synced) body.leadNew.push({ tmp: L.id, at: +L.at, name: L.name,
+          phone: L.phone, region: L.region, memo: L.memo, stage: L.stage });
+        else if (dirtyLead.has(L.id)) body.leadUpd.push({ id: +String(L.id).replace(/\D/g,""), stage: L.stage, memo: L.memo }); });
+      if (settingsDirty) body.settings = JSON.parse(JSON.stringify(D.settings));
+      body.kv = SP.persist._kvLeft();
+
+      const res = await fetch(API + "?op=sync", { method: "PUT",
+        headers: { "content-type": "application/json", ...hdr() }, body: JSON.stringify(body) });
+      if (res && res.ok){
+        const j = await res.json();
+        if (j && j.ok){
+          Object.entries(j.idMap.ledger || {}).forEach(([tmp, nid]) => {
+            const l = D.ledger.find(x => x.id === tmp); if (l){ l.id = nid; l._synced = true; } });
+          Object.entries(j.idMap.events || {}).forEach(([tmp, nid]) => {
+            const e = D.events.find(x => x.id === tmp); if (e){ e.id = nid; e._synced = true; } });
+          D.incidents.forEach(ic => ic._synced = true);
+          D.reconQueue.forEach(q => q._synced = true);
+          D.slotLocks.forEach(l => l._synced = true);
+          const remap = (map, arr) => Object.entries(map || {}).forEach(([tmp, nid]) => {
+            const x = arr.find(v => v.id === tmp); if (x){ x.id = nid; x._synced = true; } });
+          remap(j.idMap.cinq, D.inquiries); remap(j.idMap.point, D.points);
+          remap(j.idMap.order, D.orders); remap(j.idMap.lead, D.leads);
+          D.inquiries.forEach(q => q._synced = true);
+          dirtyInc.clear(); dirtyRec.clear();
+          dirtyRv.clear(); dirtyCinq.clear(); dirtyOinq.clear();
+          dirtyOrd.clear(); dirtyLead.clear();
+          settingsDirty = false; holdDirty = false;
+          clearFn && clearFn();
+          (j.rejected || []).forEach(rej => {
+            if (rej.code === "policy"){ SP.ui && SP.ui.toast(rej.reason, "warn"); return; }
+            const i = D.reservations.findIndex(x => x.id === rej.code);
+            const wasNew = dirtySnapshotHasNew(rej.code);
+            if (i >= 0 && wasNew){ D.reservations.splice(i, 1); D.occInvalidate(); }
+            SP.ui && SP.ui.toast(`서버 거절 — ${rej.code}: ${rej.reason}`, "warn");
+          });
+          if ((j.rejected || []).length){ since = 0; await poll(); }
+          else since = j.now || since;
+        }
+      }
+    } catch(e){}
+    pushing = false;
+  }
+  let lastNewIds = new Set();
+  function dirtySnapshotHasNew(id){ return lastNewIds.has(id); }
+
+  /* ── 끌어오기 ── */
+  async function poll(){
+    if (!on || pushing || !canFetch()) return;
+    try {
+      const res = await fetch(API + "?op=pull&since=" + Math.max(0, since - 3), { headers: hdr() });
+      if (!res || !res.ok) return;
+      const j = await res.json(); if (!j || !j.ok) return;
+      let changed = 0;
+      const extMap = {}; (j.ext || []).forEach(e => extMap[e.code] = e);
+      const pend = SP.persist._dirtyRes();
+      (j.res || []).forEach(row => { if (pend.has(row.code)) return;
+        changed += upsertRes(row, extMap[row.code], true); });
+      (j.ledger || []).forEach(l => { const id = "L" + l.id;
+        if (!D.ledger.some(x => x.id === id)){ D.ledger.unshift(hydLedger(l)); changed++; } });
+      (j.events || []).forEach(e => { const id = "E" + e.id;
+        if (!D.events.some(x => x.id === id)){ D.events.unshift(hydEvent(e)); changed++; } });
+      (j.incidents || []).forEach(x => { if (dirtyInc.has(x.id)) return;
+        const loc = D.incidents.find(v => v.id === x.id);
+        if (loc) Object.assign(loc, hydInc(x)); else D.incidents.unshift(hydInc(x));
+        changed++; });
+      (j.recon || []).forEach(x => { if (dirtyRec.has(x.id)) return;
+        const loc = D.reconQueue.find(v => v.id === x.id);
+        if (loc) Object.assign(loc, hydRec(x)); else D.reconQueue.unshift(hydRec(x));
+        changed++; });
+      (j.locks || []).forEach(l => { if (!D.slotLocks.some(x => x.id === l.id)){
+        D.slotLocks.push({ id: l.id, at: new Date(l.at), ids: safeJ(l.ids_json, []), _synced: true }); changed++; } });
+      (j.holds || []).forEach(h => { const b = byCode[h.branch_code];
+        if (b) D.payHold[b.id] = !!h.held; });
+      (j.reviews || []).forEach(r => { const h = hydReview(r); changed += upsertList(D.reviews, h, dirtyRv); });
+      (j.cinq || []).forEach(r => { const h = hydCinq(r);
+        if (D.inquiries.some(x => !x._synced)) return;
+        changed += upsertList(D.inquiries, h, dirtyCinq); });
+      (j.oinq || []).forEach(r => { changed += upsertList(D.ownerInqs, hydOinq(r), dirtyOinq); });
+      (j.points || []).forEach(r => { const h = hydPoint(r);
+        if (!D.points.some(x => x.id === h.id)){ D.points.unshift(h); changed++; } });
+      (j.orders || []).forEach(r => { changed += upsertList(D.orders, hydOrder(r), dirtyOrd); });
+      (j.leads || []).forEach(r => { changed += upsertList(D.leads, hydLead(r), dirtyLead); });
+      if (j.settings && j.settings.policy){ applySettings(j.settings.policy); }
+      applyKvRows(j.kv);
+      since = j.now || since;
+      if (changed){
+        D.events.sort((a, b) => b.at - a.at); D.ledger.sort((a, b) => b.at - a.at);
+        D.occInvalidate(); D.runTriggers();
+        if (SP.app && !document.querySelector(".modal-back") && !document.querySelector(".drawer"))
+          SP.app.render();
+      }
+    } catch(e){}
+  }
+
+  /* ── 변이 감지 — 분쟁 · 대사 · 잠금 · 보류 ── */
+  ["disputeIncident","confirmDeduct","withdrawIncident"].forEach(fn => {
+    const orig = D[fn];
+    D[fn] = function(id){ const r = orig.apply(null, arguments);
+      if (on && r && r.ok !== false) dirtyInc.add(id); return r; };
+  });
+  { const orig = D.addIncident;
+    D.addIncident = function(o){ const ic = orig(o); if (on && ic) dirtyInc.add(ic.id); return ic; }; }
+  { const orig = D.resolveRecon;
+    D.resolveRecon = function(id){ const r = orig.apply(null, arguments);
+      if (on && r) dirtyRec.add(id); return r; }; }
+  { const orig = D.unlockSlot;
+    D.unlockSlot = function(key){ const r = orig(key); if (on && r) unlocks.push(key); return r; }; }
+  { const o1 = D.reviewReply; D.reviewReply = function(id, t){ const r = o1(id, t);
+      if (on && r) dirtyRv.add(id); return r; }; }
+  { const o2 = D.reviewSetState; D.reviewSetState = function(id, st){ const r = o2(id, st);
+      if (on && r) dirtyRv.add(id); return r; }; }
+  { const o3 = D.inquiryTake; D.inquiryTake = function(id){ const r = o3(id);
+      if (on && r) dirtyCinq.add(id); return r; }; }
+  { const o4 = D.inquiryClose; D.inquiryClose = function(id, a){ const r = o4(id, a);
+      if (on && r) dirtyCinq.add(id); return r; }; }
+  { const o5 = D.answerOwnerInq; D.answerOwnerInq = function(id, a){ const r = o5(id, a);
+      if (on && r && r.ok) dirtyOinq.add(id); return r; }; }
+  { const o6 = D.orderSetState; D.orderSetState = function(id, st){ const r = o6(id, st);
+      if (on && r) dirtyOrd.add(id); return r; }; }
+  { const o7 = D.frAdvance; D.frAdvance = function(id){ const r = o7(id);
+      if (on && r && r.ok) dirtyLead.add(id); return r; }; }
+  ["requestAccountChange"].forEach(fn => { const orig = D[fn];
+    D[fn] = function(){ const r = orig.apply(null, arguments); if (on && r) holdDirty = true; return r; }; });
+
+  return {
+    get on(){ return on; },
+    get since(){ return since; },
+    boot, flush, poll,
+    markSettings(){ settingsDirty = true; },
+    _noteNewIds(s){ lastNewIds = new Set(s); }
+  };
 })();
 
 
@@ -2466,7 +2916,20 @@ SP.persist = (() => {
     pushing = false;
   }
 
-  function flush(){ if (mode === "remote") return push(); lsSave(); return Promise.resolve(); }
+  function kvLeft(){
+    const all=kvAll(); const out={};
+    ["hostAdj","notes","reads","partners","batches","taskAssign"]
+      .forEach(k=>{ if(all[k]!==undefined) out[k]=JSON.stringify(all[k]); });
+    return out;
+  }
+  function flush(){
+    if (mode === "live"){
+      if (SP.live) SP.live._noteNewIds(dirty.added);
+      return SP.live.flush(dirty, ()=>{ dirty.added.clear(); dirty.patch.clear(); dirty.branch.clear(); });
+    }
+    if (mode === "remote") return push();
+    lsSave(); return Promise.resolve();
+  }
   function ping(){ clearTimeout(timer); timer = setTimeout(flush, 400); }
 
   /* 대부분의 변경은 logAudit · addNote를 지나간다 */
@@ -2485,6 +2948,11 @@ SP.persist = (() => {
   let _ready;
   const ready = new Promise(r => { _ready = r; });
   (async () => {
+    if (SP.live && await SP.live.boot()){
+      mode = "live";
+      setInterval(() => SP.live.poll(), 12000);
+      _ready(); return;
+    }
     const ok = await remoteBoot();
     if (!ok){ mode = lsOK ? "local" : "memory"; lsLoad(); }
     _ready();
@@ -2499,6 +2967,9 @@ SP.persist = (() => {
                     else { touched.add(r.id); dirty.patch.add(r.id); } ping(); },
     branch: c  => { branchEd.add(c); dirty.branch.add(c); ping(); },
     _poll: poll, _push: push,
+    _applyKv: applyKv, _kvLeft: kvLeft,
+    _dirtyRes: () => new Set([...dirty.added, ...dirty.patch]),
+    _known: id => addedIds.add(id),
     _debug: () => ({ mode, added:[...addedIds], touched:touched.size,
                      branch:[...branchEd], dirty:{a:dirty.added.size,p:dirty.patch.size,b:dirty.branch.size} })
   };
@@ -5776,6 +6247,7 @@ SP.screens = SP.screens || {};
           const logs = diffs.length>5? diffs.slice(0,4).concat([`외 ${diffs.length-4}건`]) : diffs;
           logs.forEach(d=>D.logAudit("정책", "web_settings", d+` — 사유: ${reason.value.trim()}`));
           D.logEvent("PolicyUpdated","",`${diffs.length}개 항목 — ${reason.value.trim().slice(0,30)}`);
+          if(SP.live && SP.live.on) SP.live.markSettings();
           U.toast(`정책 ${diffs.length}건 반영 — 전 화면 즉시 적용 · 기예약 금액 불변`);
           SP.app.render();
         }},"협의 결과 반영")),
@@ -5975,7 +6447,46 @@ SP.screens = SP.screens || {};
               }}]);
           }},"완료"):null)));
     });
-    root.appendChild(U.card("", U.secHead("문의함", "대기 → 처리중 → 완료 · 모든 처리에 담당자 이름"), box));
+    const cNm=el("input",{placeholder:"이름", style:"max-width:100px"});
+    const cPh=el("input",{placeholder:"연락처", style:"max-width:130px", class:"num"});
+    const cCh=el("select",{}, ["전화","카카오톡"].map(c=>el("option",{value:c},c)));
+    const cSb=el("input",{placeholder:"요지 — 예: 보증금 환급 문의"});
+    root.appendChild(U.card("", U.secHead("문의함", "대기 → 처리중 → 완료 · 모든 처리에 담당자 이름"),
+      el("div",{class:"f-row", style:"margin-bottom:10px"},
+        cCh, cNm, cPh, cSb,
+        el("button",{class:"btn tiny", onclick:()=>{
+          const tr=D.addInquiry({channel:cCh.value, name:cNm.value.trim(),
+            phone:cPh.value.trim(), subject:cSb.value.trim()});
+          if(!tr.ok){ U.toast(tr.reason,"warn"); return; }
+          cNm.value=cPh.value=cSb.value="";
+          U.toast("접수 — 대장에 기록"); SP.app.render();
+        }},"수기 접수")),
+      box));
+
+    /* 점주 문의 — 호스트 센터 접수분, 본사가 여기서 답한다 */
+    const obox=el("div",{});
+    const OSTATE={received:"접수",processing:"처리중",answered:"답변 완료"};
+    if(!D.ownerInqs.length) obox.appendChild(el("div",{class:"empty"},"점주 문의가 없습니다 — 호스트 센터에서 접수되면 여기 뜹니다"));
+    D.ownerInqs.slice(0,15).forEach(g=>{
+      obox.appendChild(el("div",{class:"row-line"},
+        el("span",{},
+          el("span",{class:"evt-chip"},g.type), " ",
+          el("b",{},g.title), g.ownerName? ` — ${g.ownerName}`:"",
+          el("small",{class:"sub"},` · ${D.branchById[g.branchId]?D.branchById[g.branchId].name:""} · ${R.fmtMD(g.at)} · ${g.receipt||""}`),
+          g.answer? el("div",{class:"sub", style:"margin-top:3px"},`↳ ${g.answer}`):null),
+        el("span",{class:"gap"},
+          el("span",{class:"badge "+(g.status==="answered"?"st-done":"st-nos")},OSTATE[g.status]||g.status),
+          g.status!=="answered"? el("button",{class:"btn tiny", onclick:()=>{
+            const ta=el("textarea",{rows:"3", placeholder:"점주에게 보낼 답변 — 호스트 센터에 그대로 표시됩니다"});
+            U.modal("점주 문의 답변 — "+g.title, el("div",{}, el("p",{class:"sub"},g.content||""), ta),
+              [{label:"답변 등록", kind:"btn", onClick:(close)=>{
+                const tr=D.answerOwnerInq(g.id, ta.value.trim());
+                if(!tr.ok){ U.toast(tr.reason,"warn"); return false; }
+                U.toast("답변 등록 — 호스트 센터 반영"); close(); SP.app.render();
+              }}]);
+          }},"답변"):null)));
+    });
+    root.appendChild(U.card("", U.secHead("점주 문의 (호스트 센터)","접수 → 답변 — 답변은 점주 화면에 그대로 보입니다"), obox));
   }
 
   /* ═══════════════ 제휴 관리 (6.5 · 8.1) ═══════════════ */
@@ -6378,8 +6889,8 @@ SP.app = (() => {
       railEl.append(el("button",{class:"rail-item sigbtn"+(nn?" hot":""),
         onclick:()=>go("notes")}, nn? `노트 ${nn}건`:"노트 0건"));
     }
-    railEl.append(el("span",{class:"rail-item"+(SP.persist&&SP.persist.mode==="remote"?" sync":"")},
-      "저장 "+(SP.persist? (SP.persist.mode==="remote"?"공유(D1)"
+    railEl.append(el("span",{class:"rail-item"+(SP.persist&&(SP.persist.mode==="remote"||SP.persist.mode==="live")?" sync":"")},
+      "저장 "+(SP.persist? (SP.persist.mode==="live"?"실운영(D1)":SP.persist.mode==="remote"?"공유(D1)"
         : SP.persist.mode==="local"?"이 브라우저":"세션(미리보기)"):"세션")));
   }
 
